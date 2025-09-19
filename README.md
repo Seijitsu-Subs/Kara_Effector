@@ -14,9 +14,11 @@ I hope this proves useful to you and that you use Kara Effector as a complete te
 
 * A table has been added to the line `local line_context` to provide context to `calculate.extratime( )`.
 
-> **Effector-newlib-3.6.lua:**
+> **Effector-utils-lib-3.6.lua:**
 
 * Many descriptive UI windows with tips and hints have been removed for sheer convenience.
+
+* The section intended to prevent the name change of Effector-3.6.lua has been commented out.
 
 > **Effector-newfx-3.6.lua:**
 
