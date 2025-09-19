@@ -1,9 +1,15 @@
 Kara_Effector 3.6 Seijitsu Fork
 =============
+This is a fork of the [Kara Effector](https://github.com/KaraEffect0r/Kara_Effector/tree/master) templater for [Aegisub](https://aegisub.org/).
 In this fork, the modifications made to the original Kara Effector 3.6 Legacy code to suit the needs of the fansub will be added.
 Whenever possible, the changes will be documented so that other groups may use them if they find them appropriate.
 
-I hope this proves useful to you and that you use Kara Effector as a complete templater, not just as an effects library.
+We would like to give our sincere thanks to the original developers of the project:
+Vict8r, Karalaura, NatsuoKE & Itachi Akatsuki.
+
+We are determined to keep innovating on the wonderful foundation they have laid so that the result becomes something even better that benefits the entire karaoke effects design community.
+
+We hope this proves useful to you and that you use Kara Effector as a complete templater, not just as an effects library.
 
 **Changes included so far:**
 =============
