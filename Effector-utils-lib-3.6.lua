@@ -18712,26 +18712,26 @@
 	effector.GUI_config = {
 		[ 01 ] = {								class = "label";	x = 1; y = 0;	height = 1; width = 2;	label = " [:: Primary Setting ::]" },
 		[ 02 ] = {								class = "label";	x = 0; y = 1;	height = 1; width = 1;	label = "                          Apply to Style:" },
-		[ 03 ] = { name = "line_style";			class = "dropdown";	x = 1; y = 1;	height = 1; width = 4;	hint  = "Selected Lines or Lines Styles to which you Apply the Effect.";	items = { };	value = "" },
+		[ 03 ] = { name = "line_style";			class = "dropdown";	x = 1; y = 1;	height = 1; width = 4;	hint  = "";	items = { };	value = "" },
 		[ 04 ] = {								class = "label";	x = 0; y = 2;	height = 1; width = 1;	label = "                       Selection Effect:" },
-		[ 05 ] = { name = "effect_mode";		class = "dropdown";	x = 1; y = 2;	height = 1; width = 4;	hint  = "Select the Effect Mode, lead-in[fx], hi-light[fx], lead-out[fx], shape[fx], translation[fx] and function[fx].";	items = { "lead-in[fx]", "hi-light[fx]", "lead-out[fx]", "shape[fx]", "translation[fx]", "function[fx]" , "Add new config[fx]", "Lines Interpolation[fx]" };	value = "lead-in[fx]" },
+		[ 05 ] = { name = "effect_mode";		class = "dropdown";	x = 1; y = 2;	height = 1; width = 4;	hint  = "";	items = { "lead-in[fx]", "hi-light[fx]", "lead-out[fx]", "shape[fx]", "translation[fx]", "function[fx]" , "Add new config[fx]", "Lines Interpolation[fx]" };	value = "lead-in[fx]" },
 		[ 06 ] = {								class = "label";	x = 1; y = 5;	height = 1; width = 2;	label = " [:: Text Setting ::]" },
 		[ 07 ] = {								class = "label";	x = 1; y = 6;	height = 1; width = 2;	label = " Primary Color                                   " },
 		[ 08 ] = {								class = "label";	x = 3; y = 6;	height = 1; width = 2;	label = " Secondary Color                              " },
 		[ 09 ] = {								class = "label";	x = 1; y = 10;	height = 1; width = 2;	label = " Border Color" },
 		[ 10 ] = {								class = "label";	x = 3; y = 10;	height = 1; width = 2;	label = " Shadow Color" },
-		[ 11 ] = { name = "color_1c";			class = "color";	x = 1; y = 7;	height = 2; width = 2;	hint  = "text.color1 or TC1: Select the Primary Color of Text.";	value = "#FFFFFF" },
-		[ 12 ] = { name = "color_2c";			class = "color";	x = 3; y = 7;	height = 2; width = 2;	hint  = "text.color2 or TC2: Select the Secondary Color of Text.";	value = "#FF0000" },
-		[ 13 ] = { name = "color_3c";			class = "color";	x = 1; y = 11;	height = 2; width = 2;	hint  = "text.color3 or TC3: Select the Border Color of Text.";		value = "#000000" },
-		[ 14 ] = { name = "color_4c";			class = "color";	x = 3; y = 11;	height = 2; width = 2;	hint  = "text.color4 or TC4: Select the Shadow Color of Text.";		value = "#000000" },
-		[ 15 ] = { name = "alpha_1a";			class = "intedit";	x = 1; y = 9;	height = 1; width = 2;	min   = 0; max = 255;			hint = "text.alpha1 or TA1: Select the Transparency (alpha) of the Primary Color of Text.";		value = "0" },
-		[ 16 ] = { name = "alpha_2a";			class = "intedit";	x = 3; y = 9;	height = 1; width = 2;	min   = 0; max = 255;			hint = "text.alpha2 or TA2: Select the Transparency (alpha) of the Secondary Color of Text.";	value = "0" },
-		[ 17 ] = { name = "alpha_3a";			class = "intedit";	x = 1; y = 13;	height = 1; width = 2;	min   = 0; max = 255;			hint = "text.alpha3 or TA3: Select the Transparency (alpha) of the Border Color of Text.";		value = "0" },
-		[ 18 ] = { name = "alpha_4a";			class = "intedit";	x = 3; y = 13;	height = 1; width = 2;	min   = 0; max = 255;			hint = "text.alpha4 or TA4: Select the Transparency (alpha) of the Shadow Color of Text.";		value = "0" },
-		[ 19 ] = { name = "linecomment";		class = "checkbox"; x = 0; y = 16;	height = 1; width = 1;	label = "Line Comment";			hint = "Comment the Lines of Karaoke.";		value = true },
-		[ 20 ] = { name = "saveconfiguration";	class = "checkbox"; x = 0; y = 17;	height = 1; width = 1;	label = "Save Configuration";	hint = "Save the Configuration of Text.";	value = true },
+		[ 11 ] = { name = "color_1c";			class = "color";	x = 1; y = 7;	height = 2; width = 2;	hint  = "";	value = "#FFFFFF" },
+		[ 12 ] = { name = "color_2c";			class = "color";	x = 3; y = 7;	height = 2; width = 2;	hint  = "";	value = "#FF0000" },
+		[ 13 ] = { name = "color_3c";			class = "color";	x = 1; y = 11;	height = 2; width = 2;	hint  = "";		value = "#000000" },
+		[ 14 ] = { name = "color_4c";			class = "color";	x = 3; y = 11;	height = 2; width = 2;	hint  = "";		value = "#000000" },
+		[ 15 ] = { name = "alpha_1a";			class = "intedit";	x = 1; y = 9;	height = 1; width = 2;	min   = 0; max = 255;			hint = "";		value = "0" },
+		[ 16 ] = { name = "alpha_2a";			class = "intedit";	x = 3; y = 9;	height = 1; width = 2;	min   = 0; max = 255;			hint = "";	value = "0" },
+		[ 17 ] = { name = "alpha_3a";			class = "intedit";	x = 1; y = 13;	height = 1; width = 2;	min   = 0; max = 255;			hint = "";		value = "0" },
+		[ 18 ] = { name = "alpha_4a";			class = "intedit";	x = 3; y = 13;	height = 1; width = 2;	min   = 0; max = 255;			hint = "";		value = "0" },
+		[ 19 ] = { name = "linecomment";		class = "checkbox"; x = 0; y = 16;	height = 1; width = 1;	label = "Line Comment";			hint = "";		value = true },
+		[ 20 ] = { name = "saveconfiguration";	class = "checkbox"; x = 0; y = 17;	height = 1; width = 1;	label = "Save Configuration";	hint = "";	value = true },
 		[ 23 ] = {								class = "label";	x = 0; y = 3;	height = 1; width = 1;	label = "                     Using Tags Filter:" },
-		[ 24 ] = { name = "tags_filter";		class = "dropdown";	x = 1; y = 3;	height = 1; width = 4;	hint  = "Select the Filter to be used for the Tags Colors and Alpha of Text.";	items = { "XY-VSFilter", "No Tags Color and Alpha" };	value = "XY-VSFilter" },
+		[ 24 ] = { name = "tags_filter";		class = "dropdown";	x = 1; y = 3;	height = 1; width = 4;	hint  = "";	items = { "XY-VSFilter", "No Tags Color and Alpha" };	value = "XY-VSFilter" },
 		[ 25 ] = {								class = "label";	x = 0; y = 9;	height = 1; width = 1;	label = "Kara Effector " .. script_version .. script_update },
 		[ 26 ] = {								class = "label";	x = 0; y = 10;	height = 1; width = 1;	label = Effector_Lib_modified },
 		[ 27 ] = {								class = "label";	x = 0; y = 11;	height = 1; width = 1;	label = "(c) Vict8r Kara" },
@@ -18848,41 +18848,41 @@
 	}--▲
 	
 	-- Hints ----------------------------
-	effector.GUI_modify[ 29 ].hint = "Effect Type to Apply at Line Effect"
-	effector.GUI_modify[ 32 ].hint = "shape.color1 or SC1: Primary Color Shape \\1c"
-	effector.GUI_modify[ 33 ].hint = "shape.color3 or SC3: Border Color Shape \\3c"
-	effector.GUI_modify[ 34 ].hint = "shape.color4 or SC4: Shadow Color Shape \\4c"
-	effector.GUI_modify[ 35 ].hint = "shape.alpha1 or SA1: Primary Alpha Shape \\1a"
-	effector.GUI_modify[ 36 ].hint = "shape.alpha3 or SA3: Border Alpha Shape \\3a"
-	effector.GUI_modify[ 37 ].hint = "shape.alpha4 or SA4: Shadow Alpha Shape \\4a"
-	effector.GUI_modify[ 38 ].hint = "fx.start_time: Is the Start Time Line Effect"
-	effector.GUI_modify[ 39 ].hint = "fx.end_time: Is the End Time Line Effect\nfx.dur = fx.end_time - fx.start_time"
-	effector.GUI_modify[ 40 ].hint = "fx.fun_x: Parametric Function Equation for X, example: x( s ) = 3 * sin(s + 1)"
-	effector.GUI_modify[ 41 ].hint = "fx.fun_y: Parametric Function Equation for Y, example: y( s ) = s^2 + cos( s )"
-	effector.GUI_modify[ 42 ].hint = "fx.domain_i: Initial Domain of Parametric Function"
-	effector.GUI_modify[ 43 ].hint = "fx.domain_f: Final Domain of Parametric Function"
-	effector.GUI_modify[ 44 ].hint = "fx.center_x: x-coordinate of the Reference Point of the Position"
-	effector.GUI_modify[ 45 ].hint = "fx.center_y: y-coordinate of the Reference Point of the Position"
-	effector.GUI_modify[ 46 ].hint = "fx.scale_x: x-scale of the Parametric Function"
-	effector.GUI_modify[ 47 ].hint = "fx.scale_y: y-scale of the Parametric Function"
-	effector.GUI_modify[ 48 ].hint = "fx.align: Line Effect Alignment, for example \\an5"
-	effector.GUI_modify[ 49 ].hint = "fx.layer: Line Effect Layer"
-	effector.GUI_modify[ 50 ].hint = "x-coordinate of the Position of Line Effect\nfx.pos_x = fx.center_x + fx.fun_x * fx.scale_x"
-	effector.GUI_modify[ 51 ].hint = "y-coordinate of the Position of Line Effect\nfx.pos_y = fx.center_y + fx.fun_y * fx.scale_y"
-	effector.GUI_modify[ 52 ].hint = "fx.movet_i, fx.movet_f: Time Move, for default: 0, fx.dur"
-	effector.GUI_modify[ 53 ].hint = "fx.loop_v, fx.loop_h: Line Effect Loop\nmaxj = fx.loop_v * fx.loop_h"
-	effector.GUI_modify[ 54 ].hint = "fx.sizex, fx.sizey: Line Effect Size (\\fscx and \\fscy)"
-	effector.GUI_modify[ 55 ].hint = "Line Effect Return, example: syl.text, char.text, \"m 0 0 l 0 1 l 1 1 l 1 0 \""
-	effector.GUI_modify[ 56 ].hint = "Line Effect Add Tags, example: \"\\\\bord0\"; format( \"\\\\3c%s\", shape.color3 ) in lua Language, or: !maxloop( $width / $syln )!!retime( \"start2syl\", -1000 + $si * 50, 0 )!{\\1c!color.random( )!} in Automation Auto-4 Language"
-	effector.GUI_modify[ 57 ].hint = "Declare Variables and Functions"
-	effector.GUI_modify[ 58 ].hint = "Line Effect Save Configuration"
-	effector.GUI_modify[ 61 ].hint = "Print Configurations of the Line Effect"
-	effector.GUI_modify[ 62 ].hint = "New Effect Name. Not use Special Characters"
-	effector.GUI_modify[ 63 ].hint = "Destination Folder for the New Effect"
-	effector.GUI_modify[ 66 ].hint = "Select the Programming Language for Add Tags"
-	effector.GUI_modify[ 67 ].hint = "Decide whether the settings made will generate fx lines or will modify existing karaoke lines"
-	effector.GUI_modify[ 69 ].hint = "Add tags that have karaoke lines to the generated effect lines"
-	effector.GUI_modify[ 70 ].hint = "Return reversely the text of karaoke effect, written from right to left"
+	effector.GUI_modify[ 29 ].hint = ""
+	effector.GUI_modify[ 32 ].hint = ""
+	effector.GUI_modify[ 33 ].hint = ""
+	effector.GUI_modify[ 34 ].hint = ""
+	effector.GUI_modify[ 35 ].hint = ""
+	effector.GUI_modify[ 36 ].hint = ""
+	effector.GUI_modify[ 37 ].hint = ""
+	effector.GUI_modify[ 38 ].hint = ""
+	effector.GUI_modify[ 39 ].hint = ""
+	effector.GUI_modify[ 40 ].hint = ""
+	effector.GUI_modify[ 41 ].hint = ""
+	effector.GUI_modify[ 42 ].hint = ""
+	effector.GUI_modify[ 43 ].hint = ""
+	effector.GUI_modify[ 44 ].hint = ""
+	effector.GUI_modify[ 45 ].hint = ""
+	effector.GUI_modify[ 46 ].hint = ""
+	effector.GUI_modify[ 47 ].hint = ""
+	effector.GUI_modify[ 48 ].hint = ""
+	effector.GUI_modify[ 49 ].hint = ""
+	effector.GUI_modify[ 50 ].hint = ""
+	effector.GUI_modify[ 51 ].hint = ""
+	effector.GUI_modify[ 52 ].hint = ""
+	effector.GUI_modify[ 53 ].hint = ""
+	effector.GUI_modify[ 54 ].hint = ""
+	effector.GUI_modify[ 55 ].hint = ""
+	effector.GUI_modify[ 56 ].hint = ""
+	effector.GUI_modify[ 57 ].hint = ""
+	effector.GUI_modify[ 58 ].hint = ""
+	effector.GUI_modify[ 61 ].hint = ""
+	effector.GUI_modify[ 62 ].hint = ""
+	effector.GUI_modify[ 63 ].hint = ""
+	effector.GUI_modify[ 66 ].hint = ""
+	effector.GUI_modify[ 67 ].hint = ""
+	effector.GUI_modify[ 69 ].hint = ""
+	effector.GUI_modify[ 70 ].hint = ""
 	
 	-------------------------------------
 	effector.GUI_karax = table.duplicate( effector.GUI_modify )
@@ -21011,32 +21011,32 @@
 				if  sett.effect_mode == "lead-in[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select lead-in[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "lead_in_fx";		class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect lead-in[fx] for Karaoke."; items = leadin_fx; value = sett.lead_in_fx or leadin_fx[ 1 ]
+						hint = ""; items = leadin_fx; value = sett.lead_in_fx or leadin_fx[ 1 ]
 					}
 				elseif sett.effect_mode == "hi-light[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select hi-light[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "hi_light_fx";		class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect hi-light[fx] for Karaoke."; items = hilight_fx; value = sett.hi_light_fx or hilight_fx[ 1 ]
+						hint = ""; items = hilight_fx; value = sett.hi_light_fx or hilight_fx[ 1 ]
 					}
 				elseif sett.effect_mode == "lead-out[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select lead-out[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "lead_out_fx"; 	class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect lead-out[fx] for Karaoke."; items = leadout_fx; value = sett.lead_out_fx or leadout_fx[ 1 ]
+						hint = ""; items = leadout_fx; value = sett.lead_out_fx or leadout_fx[ 1 ]
 					}
 				elseif sett.effect_mode == "shape[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select shape[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "shape_fx_fx"; 	class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect shape[fx] for Karaoke."; items = shape_fx; value = sett.shape_fx_fx or shape_fx[ 1 ]
+						hint = ""; items = shape_fx; value = sett.shape_fx_fx or shape_fx[ 1 ]
 					}
 				elseif sett.effect_mode == "translation[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select translation[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "transla_fx_fx"; 	class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect Translation for Karaoke."; items = transla_fx; value = sett.transla_fx_fx or transla_fx[ 1 ]
+						hint = ""; items = transla_fx; value = sett.transla_fx_fx or transla_fx[ 1 ]
 					}
 				elseif sett.effect_mode == "function[fx]" then
 					effector.GUI_config[ 21 ] = { class = "label";	x = 1; y = 16;	height = 1; width = 2; label = " Select function[fx]:" }
 					effector.GUI_config[ 22 ] = { name = "function_fx_fx";	class = "dropdown";	x = 1; y = 17;	height = 1; width = 4;
-						hint = "Select the Effect Function for Karaoke."; items = function_fx; value = sett.function_fx_fx or function_fx[ 1 ]
+						hint = ""; items = function_fx; value = sett.function_fx_fx or function_fx[ 1 ]
 					}
 				end
 				---------------------------------------------------------------------------------
