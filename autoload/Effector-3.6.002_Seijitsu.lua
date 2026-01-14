@@ -29,19 +29,19 @@
 	que están haciendo,  ya que lo que más factible es que deje de funcionar de manera correcta o que simplemente no lo haga. Y sin
 	más, nos despedimos, esperando que este trabajo sea del agrado de todos ustedes. ^^'... ]]--
 	--===========================================================================================================================--
-	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 September 19th 2024 Argentina ]]--
-
-	--> Modificaciones hasta el momento:
-	--> local line_context
-	
+	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 September 19th 2025 Argentina ]]--
 	--===========================================================================================================================--
 	include( "karaskel.lua" )
-	include( "Effector-utils-lib-3.6.lua" )
+	include( "Effector-utils-lib-3.6.002_Seijitsu.lua" )
+	
+	--> Modificaciones hasta el momento:
+	-- CARGA DE LA NUEVA LIBRERÍA newkara_library
+	ke = include( "kelibs/newkara_library.lua" )
 	--===========================================================================================================================--
-	script_name		   = "Kara Effector Seijitsu"
+	script_name		   = "Kara Effector Seijitsu Fork"
 	script_description = "Effects Automation Karaokes. Creating Effects with Modifiable Parameters"
-	script_author	   = "KaraLaura"
-	script_version	   = "3.6"
+	script_author	   = "KaraLaura" -- A quien le damos muchas gracias.
+	script_version	   = "3.6.002"
 	--===========================================================================================================================--
 	Path_Effector_newfx_lua = nil
 	--Path_Effector_newfx_lua = "C:\\Users\\HP4\\Desktop\\Kara Effector 3.6\\Effector-newfx-3.6.lua"
@@ -85,7 +85,7 @@
 		xres = meta.res_x or 1280
 		yres = meta.res_y or 720
 		if xres then
-			ratio = xres / 1280
+			ratio = xres / 720
 		end
 		local msa = aegisub.ms_from_frame( 1 )
 		local msb = aegisub.ms_from_frame( 101 )
@@ -103,6 +103,20 @@
 		L = linefx[ ii ].styleref
 		line.dur = l.duration
 		l_fx = line.effect
+		-- ======================================================================
+		-- Crea una tabla de contexto para pasarla a funciones externas.
+		local line_context = {
+			line = line,
+			l = l,
+			l_counter = l_counter,
+			maxil_count = maxil_count,
+			linefx = linefx,
+			idx_line = idx_line,
+			count_line_dialogue = count_line_dialogue,
+			ini_line = ini_line,
+			meta = meta
+		}
+		-- ======================================================================
 		----------------------------------------------------------------
 		line.hira = linefx[ ii ].hira.text
 		line.kata = linefx[ ii ].kata.text
@@ -213,30 +227,18 @@
 			blk = ""
 		end
 		local l = table.copy( line )
-		-- Tabla para el uso global de calculate.extratime( ).
-		local line_context = {
-			line = line,
-			l = lfx,
-			l_counter = l_counter,
-			idx_line = idx_line,
-			count_line_dialogue = count_line_dialogue,
-			ini_line = ini_line,
-			linefx = linefx,
-			meta = meta,
-			sett = sett
-		}
 		--===========================================================--
-		if line.i == 1 then	--Autosave
+            if line.i == 1 then        --Autosave
 			local file_maxn = 512
 			local file_nmfx = format( "AutoSave_KE_%s", (count_save - 1) % file_maxn + 1 )
-			local file_name = format( "%sautosave\\Effector AutoSave %s.lua", aegisub.decode_path( "?user/" ), (count_save - 1) % file_maxn + 1 )
+			local file_name = format( "%s\\autosave\\Effector AutoSave %s.lua", aegisub.decode_path( "?user/" ), (count_save - 1) % file_maxn + 1 )
 			local file_save, infile_fx
 			file_save = io.open( file_name, "w" )
 			if file_save == nil then --> autosave folder nil
 				error(
-					format( "\n\n\n[::error -> autosave folder nil::]\nLa carpeta autosave no existe. Debes crear una carpeta con el nombre <<autosave>> en la dirección %s para que el Kara Effector se pueda ejecutar de forma correcta.\n\nLa siguiente carpeta debe existir:\n%s\\autosave\n\n\n",
-						aegisub.decode_path( "?data" ), aegisub.decode_path( "?data" )
-					), 2
+                                       format( "\n\n\n[::error -> autosave folder nil::]\nThe autosave folder does not exist. You must create a folder named 'autosave' at the location %s for Kara Effector to run correctly.\n\nThe following folder must exist:\n%s\\autosave\n\n\n",
+                        aegisub.decode_path( "?user" ), aegisub.decode_path( "?user" )
+                    ), 2
 				)
 			end
 			------------------------------
@@ -968,6 +970,52 @@
 									maxj = fx.maxloop_fx
 									-----------------------------------------------
 									while j <= fx.maxloop_fx do
+									-- [PUENTE DE CONTEXTO MEJORADO]
+									if ke and ke.infofx then
+										-- Datos Globales de Renderizado
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto General de la Línea y el Script
+										ke.infofx.l = line_context.l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										ke.infofx.line_context = line_context -- Paquete completo de contexto de línea
+										
+										-- Unidades de Karaoke (Sílaba, Palabra, Caracter, etc.)
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteradores de Progreso (Valores de 0 a 1)
+										ke.infofx.module = module
+										ke.infofx.module1 = module1
+										ke.infofx.module2 = module2
+										ke.infofx.modules3w = modules3w
+										ke.infofx.modulec3s = modulec3s
+										ke.infofx.modulec3w = modulec3w
+										
+										-- Iteradores de Conteo
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Variables del Usuario (del campo Variables[fx])
+										ke.infofx.var = var
+										
+										-- Estado Calculado del Efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades Globales del Effector
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
 										var.loop = variable_( fx__, line, x, y )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
@@ -997,15 +1045,15 @@
 											end
 										)
 										if fx__.start_t:match( "retime" ) then
-											local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-											time_rtm = time_rtm( fx__, meta, line )
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
 										else
-											start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-											start_t	= start_t1( fx__, meta, line )
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
 											fx.start_time = start_t[ 1 ] or line.start_time
 											l.start_time = fx.start_time
-											end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-											end_t = end_t1( fx__, meta, line )
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
 											fx.end_time = end_t[ 1 ] or line.end_time
 											l.end_time = fx.end_time
 											fx.dur = fx.end_time - fx.start_time
@@ -1020,22 +1068,22 @@
 										word.word_start = ini + word.start_time
 										word.word_end = word.word_start + word.dur
 										--variables de punto de referencia--
-										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-										center_x = center_x1( fx__, meta, line, x, y )
+										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+										center_x = center_x1( fx__, meta, line, x, y, line_context )
 										fx.center_x = center_x[ 1 ] or val_center
-										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-										center_y = center_y1( fx__, meta, line, x, y )
+										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+										center_y = center_y1( fx__, meta, line, x, y, line_context )
 										fx.center_y = center_y[ 1 ] or val_middle
 										--variables de escalas de funciones paramétricas--
 										if j == 1 then
-											scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-											scale_x = scale_x1( fx__, meta, line )
+											scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+											scale_x = scale_x1( fx__, meta, line, line_context )
 											fx.scale_x = scale_x[ 1 ] or 1
 											if fx.scale_x <= 0 then
 												fx.scale_x = 0.1
 											end
-											scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-											scale_y = scale_y1( fx__, meta, line )
+											scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+											scale_y = scale_y1( fx__, meta, line, line_context )
 											fx.scale_y = scale_y[ 1 ] or 1
 											if fx.scale_y <= 0 then
 												fx.scale_y = 0.1
@@ -1045,17 +1093,17 @@
 										offset_h = center_y[ 2 ] or 0.9
 										--variables de dominio de funciones--
 										if j == 1 then
-											s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-											s_i = s_i1( fx__, meta, line )
+											s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+											s_i = s_i1( fx__, meta, line, line_context )
 											fx.domain_i = s_i[ 1 ] or 0
-											s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-											s_f = s_f1( fx__, meta, line )
+											s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+											s_f = s_f1( fx__, meta, line, line_context )
 											fx.domain_f = s_f[ 1 ] or 1
 										end
 										local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 										--variables de funciones paramétricas--
-										fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-										fun_x = fun_x1( fx__, meta, line, s )
+										fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+										fun_x = fun_x1( fx__, meta, line, s, line_context )
 										local point_xy --march 31st 2020
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -1063,8 +1111,8 @@
 										else
 											fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 										end
-										fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-										fun_y = fun_y1( fx__, meta, line, s )
+										fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+										fun_y = fun_y1( fx__, meta, line, s, line_context )
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											fx.fun_y = point_xy.y * fx.scale_y
 										else
@@ -1082,8 +1130,8 @@
 										fx.pos_b = fx.pos_y + l.height / 2
 										x, y = fx.pos_x, fx.pos_y
 										--variables de tamaño--
-										sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-										sizefx = sizefx1( fx__, meta, line, s )
+										sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+										sizefx = sizefx1( fx__, meta, line, s, line_context )
 										fx.sizex = L.scale_x
 										fx.sizey = L.scale_y
 										fx.tag_size = ""
@@ -1093,28 +1141,28 @@
 											fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 										end
 										--variables de alineación y de capa (layer)--
-										align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-										align = align1( fx__, meta, line, s )
+										align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+										align = align1( fx__, meta, line, s, line_context )
 										fx.align = ""
 										if #align > 0 then
 											fx.align = "\\an" .. align[ 1 ]
 										end
-										layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-										layer = layer1( fx__, meta, line, s )
+										layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+										layer = layer1( fx__, meta, line, s, line_context )
 										fx.layer = layer[ 1 ] or l_layer
 										--variables de posiciones definitivas, dependiendo del "move"--
-										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-										move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-										move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+										move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+										move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 										--variables de tiempo del movimiento--
 										fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 											function( time_HMS )
 												return tostring( HMS_to_ms( time_HMS ) )
 											end
 										)
-										move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-										move_t = move_t1( fx__, meta, line, s )
+										move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+										move_t = move_t1( fx__, meta, line, s, line_context )
 										fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 										fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 										tags_times = ""
@@ -1132,8 +1180,8 @@
 											and fx__.t_type ~= "Template Line [Syl]"
 											and fx__.t_type ~= "Template Line [Char]" then
 											if fx__.language ~= "Automation Auto-4" then
-												addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-												addtag = addtag1( fx__, meta, line, x, y )
+												addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+												addtag = addtag1( fx__, meta, line, x, y, line_context )
 												for k, v in pairs( addtag ) do
 													if type( addtag[ k ] ) == "table" then
 														addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -1147,9 +1195,9 @@
 										end
 										-----------------------
 										returnfx = { [ 1 ] = fx__.returnfx }
-										if pcall( loadstring( format( "return function( fx__, meta, syl, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-											returnfx1 = loadstring( format( "return function( fx__, meta, syl, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-											returnfx = returnfx1( fx__, meta, syl, line )
+										if pcall( loadstring( format( "return function( fx__, meta, syl, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+											returnfx1 = loadstring( format( "return function( fx__, meta, syl, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+											returnfx = returnfx1( fx__, meta, syl, line, line_context )
 										end
 										Rline = 1
 										if returnfx[ 2 ] == "random" then
@@ -1319,44 +1367,44 @@
 										effector.default_val( )
 										effector.effect_offset( ) --may 31st 2020
 										-----------------------------------------------
-										if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-											variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-											var_KEfx_ = variable_( fx__, meta, line, x, y )
+										if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+											variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+											var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 										end
-										variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+										variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 										if line.i == 1
 											and syl.i == 1
 											and sylchar.i == 1
 											and J == 1 then
-											var.once = remember( "var_once", variable_( fx__, meta, line, x, y ) )
+											var.once = remember( "var_once", variable_( fx__, meta, line, x, y, line_context ) )
 										else
 											var.once = recall.var_once
 										end
 										if syl.i  == 1
 										and sylchar.i == 1
 											and J == 1 then
-											var.line = variable_( fx__, meta, line, x, y )
+											var.line = variable_( fx__, meta, line, x, y, line_context )
 										end
 										if wordchar.i == 1
 											and J == 1 then
-											var.word = variable_( fx__, meta, line, x, y )
+											var.word = variable_( fx__, meta, line, x, y, line_context )
 										end
 										if sylchar.i == 1
 											and J == 1 then
-											var.syl = variable_( fx__, meta, line, x, y )
+											var.syl = variable_( fx__, meta, line, x, y, line_context )
 										end
 										if J == 1 then
-											var.rep = variable_( fx__, meta, line, x, y )
+											var.rep = variable_( fx__, meta, line, x, y, line_context )
 										end
-										var.char = variable_( fx__, meta, line, x, y )
+										var.char = variable_( fx__, meta, line, x, y, line_context )
 										var.furi = var.char
-										var.loop = variable_( fx__, meta, line, x, y )
+										var.loop = variable_( fx__, meta, line, x, y, line_context )
 										text.char_size( )
 										-----------------------------------------------
-										maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-										maxloop_fx = maxloop1( fx__, meta, line, x, y )
+										maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+										maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 										loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (char.width + 2 * L.outline) / (line.height + 2 * L.outline) )
-										maxloop_fx = maxloop1( fx__, meta, line, x, y )
+										maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 										fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 										fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 										fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -1364,8 +1412,42 @@
 										maxj = fx.maxloop_fx
 										-----------------------------------------------
 										while j <= fx.maxloop_fx do
+										-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
 											ci = 0
-											var.loop = variable_( fx__, meta, line, x, y )
+											var.loop = variable_( fx__, meta, line, x, y, line_context )
 											--variables de modulo--
 											module = (j - 1) / (maxj - 1)
 											if fx.maxloop_fx == 1 then
@@ -1390,30 +1472,30 @@
 												modulec3w = (wordchar.i - 1) / (wordchar.n - 1)
 											end
 											--variables de tiempo--
-											fx__.start_t = fx__.start_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
-												function( time_HMS )
-													return tostring( HMS_to_ms( time_HMS ) )
-												end
-											)
-											fx__.end_t = fx__.end_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
-												function( time_HMS )
-													return tostring( HMS_to_ms( time_HMS ) )
-												end
-											)
-											if fx__.start_t:match( "retime" ) then
-												local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-												time_rtm = time_rtm( fx__, meta, line, module )
-											else
-												start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-												start_t	= start_t1( fx__, meta, line, module )
-												fx.start_time = start_t[ 1 ] or line.start_time
-												l.start_time = fx.start_time
-												end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-												end_t = end_t1( fx__, meta, line, module )
-												fx.end_time = end_t[ 1 ] or line.end_time
-												l.end_time = fx.end_time
-												fx.dur = fx.end_time - fx.start_time
+										fx__.start_t = fx__.start_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
+											function( time_HMS )
+												return tostring( HMS_to_ms( time_HMS ) )
 											end
+										)
+										fx__.end_t = fx__.end_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
+											function( time_HMS )
+												return tostring( HMS_to_ms( time_HMS ) )
+											end
+										)
+										if fx__.start_t:match( "retime" ) then
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
+										else
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
+											fx.start_time = start_t[ 1 ] or line.start_time
+											l.start_time = fx.start_time
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
+											fx.end_time = end_t[ 1 ] or line.end_time
+											l.end_time = fx.end_time
+											fx.dur = fx.end_time - fx.start_time
+										end
 											---------------------------------------------------
 											without = { }
 											ini = line.start_time - fx.start_time
@@ -1427,22 +1509,22 @@
 											word.word_start = ini + word.start_time
 											word.word_end = word.word_start + word.dur
 											--variables de punto de referencia--
-											center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-											center_x = center_x1( fx__, meta, line, x, y )
+											center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+											center_x = center_x1( fx__, meta, line, x, y, line_context )
 											fx.center_x = center_x[ 1 ] or val_center
-											center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-											center_y = center_y1( fx__, meta, line, x, y )
+											center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+											center_y = center_y1( fx__, meta, line, x, y, line_context )
 											fx.center_y = center_y[ 1 ] or val_middle
 											--variables de escalas de funciones paramétricas-- 
 											if j == 1 then
-												scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-												scale_x	= scale_x1( fx__, meta, line )
+												scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+												scale_x	= scale_x1( fx__, meta, line, line_context )
 												fx.scale_x = scale_x[ 1 ] or 1
 												if fx.scale_x <= 0 then
 													fx.scale_x = 0.1
 												end
-												scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-												scale_y	= scale_y1( fx__, meta, line )
+												scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+												scale_y	= scale_y1( fx__, meta, line, line_context )
 												fx.scale_y = scale_y[ 1 ] or 1
 												if fx.scale_y <= 0 then
 													fx.scale_y = 0.1
@@ -1452,17 +1534,17 @@
 											offset_h = center_y[ 2 ] or 0.9
 											--variables de dominio de funciones--
 											if j == 1 then
-												s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-												s_i = s_i1( fx__, meta, line )
+												s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+												s_i = s_i1( fx__, meta, line, line_context )
 												fx.domain_i = s_i[ 1 ] or 0
-												s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-												s_f = s_f1( fx__, meta, line )
+												s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+												s_f = s_f1( fx__, meta, line, line_context )
 												fx.domain_f = s_f[ 1 ] or 1
 											end
 											local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 											--variables de funciones paramétricas--
-											fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-											fun_x = fun_x1( fx__, meta, line, s )
+											fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+											fun_x = fun_x1( fx__, meta, line, s, line_context )
 											local point_xy
 											if table.type( { fun_x[ 1 ] } ) == "shape" then
 												point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -1470,8 +1552,8 @@
 											else
 												fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 											end
-											fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-											fun_y = fun_y1( fx__, meta, line, s )
+											fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+											fun_y = fun_y1( fx__, meta, line, s, line_context )
 											if table.type( { fun_x[ 1 ] } ) == "shape" then
 												fx.fun_y = point_xy.y * fx.scale_y
 											else
@@ -1489,8 +1571,8 @@
 											fx.pos_b = fx.pos_y + char.height / 2
 											x, y = fx.pos_x, fx.pos_y
 											--variables de tamaño--
-											sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-											sizefx = sizefx1( fx__, meta, line, s )
+											sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+											sizefx = sizefx1( fx__, meta, line, s, line_context )
 											fx.sizex = L.scale_x
 											fx.sizey = L.scale_y
 											fx.tag_size = ""
@@ -1500,28 +1582,28 @@
 												fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 											end
 											--variables de alineación y de capa (layer)--
-											align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-											align = align1( fx__, meta, line, s )
+											align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+											align = align1( fx__, meta, line, s, line_context )
 											fx.align = ""
 											if #align > 0 then
 												fx.align = "\\an" .. align[ 1 ]
 											end
-											layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-											layer = layer1( fx__, meta, line, s )
+											layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+											layer = layer1( fx__, meta, line, s, line_context )
 											fx.layer = layer[ 1 ] or l_layer
 											--variables de posiciones, dependiendo del "move"--
-											move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-											move_x	= math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-											move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-											move_y	= math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+											move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+											move_x	= math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+											move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+											move_y	= math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 											--variables de tiempo del movimiento--
 											fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 												function( time_HMS )
 													return tostring( HMS_to_ms( time_HMS ) )
 												end
 											)
-											move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-											move_t	= move_t1( fx__, meta, line, s )
+											move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+											move_t	= move_t1( fx__, meta, line, s, line_context )
 											fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 											fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 											tags_times = ""
@@ -1536,8 +1618,8 @@
 											-----------------------
 											fx.add_tags = ""
 											if fx__.language ~= "Automation Auto-4" then
-												addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-												addtag = addtag1( fx__, meta, line, x, y )
+												addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+												addtag = addtag1( fx__, meta, line, x, y, line_context )
 												for k, v in pairs( addtag ) do
 													if type( addtag[ k ] ) == "table" then
 														addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -1550,9 +1632,9 @@
 											fx.add_tags = tag.dark( fx.add_tags )
 											-----------------------
 											returnfx = { [ 1 ] = fx__.returnfx }
-											if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-												returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-												returnfx = returnfx1( fx__, meta, line )
+											if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+												returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+												returnfx = returnfx1( fx__, meta, line, line_context )
 											end
 											Rline = 1
 											if returnfx[ 2 ] == "random" then
@@ -1703,33 +1785,33 @@
 									effector.default_val( )
 									effector.effect_offset( ) --may 31st 2020
 									-----------------------------------------------
-									if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-										variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-										var_KEfx_ = variable_( fx__, meta, line, x, y )
+									if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+										variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+										var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 									end
-									variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+									variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 									if line.i == 1
 										and furi.i == 1
 										and J == 1 then
-										var.once = remember( "v_once", variable_( fx__, meta, line, x, y ) )
+										var.once = remember( "v_once", variable_( fx__, meta, line, x, y, line_context ) )
 									else
 										var.once = recall.v_once
 									end
 									if furi.i == 1
 										and J == 1 then
-										var.line = variable_( fx__, meta, line, x, y )
+										var.line = variable_( fx__, meta, line, x, y, line_context )
 									end
 									if J == 1 then
-										var.rep  = variable_( fx__, meta, line, x, y )
+										var.rep  = variable_( fx__, meta, line, x, y, line_context )
 									end
-									var.furi = variable_( fx__, meta, line, x, y )
+									var.furi = variable_( fx__, meta, line, x, y, line_context )
 									var.word, var.syl, var.char = var.furi, var.furi, var.furi
-									var.loop = variable_( fx__, meta, line, x, y )
+									var.loop = variable_( fx__, meta, line, x, y, line_context )
 									-----------------------------------------------
-									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (furi.width + 2 * L.outline) / (furi.height + 2 * L.outline) )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 									fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 									fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -1737,7 +1819,41 @@
 									maxj = fx.maxloop_fx
 									-----------------------------------------------
 									while j <= fx.maxloop_fx do
-										var.loop = variable_( fx__, meta, line, x, y )
+									-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
+										var.loop = variable_( fx__, meta, line, x, y, line_context )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
 										if fx.maxloop_fx == 1 then
@@ -1763,15 +1879,15 @@
 											end
 										)
 										if fx__.start_t:match( "retime" ) then
-											local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-											time_rtm = time_rtm( fx__, meta, line )
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
 										else
-											start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-											start_t	= start_t1( fx__, meta, line )
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
 											fx.start_time = start_t[ 1 ] or line.start_time
 											l.start_time = fx.start_time
-											end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-											end_t = end_t1( fx__, meta, line )
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
 											fx.end_time = end_t[ 1 ] or line.end_time
 											l.end_time = fx.end_time
 											fx.dur = fx.end_time - fx.start_time
@@ -1783,22 +1899,22 @@
 										furi.syl_start = ini + furi.start_time
 										furi.syl_end = furi.syl_start + furi.dur
 										--variables de punto de referencia--
-										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-										center_x = center_x1( fx__, meta, line, x, y )
+										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+										center_x = center_x1( fx__, meta, line, x, y, line_context )
 										fx.center_x = center_x[ 1 ] or val_center
-										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-										center_y = center_y1( fx__, meta, line, x, y )
+										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+										center_y = center_y1( fx__, meta, line, x, y, line_context )
 										fx.center_y = center_y[ 1 ] or val_middle
 										--variables de escalas de funciones paramétricas-- 
 										if j == 1 then
-											scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-											scale_x	= scale_x1( fx__, meta, line )
+											scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+											scale_x	= scale_x1( fx__, meta, line, line_context )
 											fx.scale_x = scale_x[ 1 ] or 1
 											if fx.scale_x <= 0 then
 												fx.scale_x = 0.1
 											end
-											scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-											scale_y	= scale_y1( fx__, meta, line )
+											scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+											scale_y	= scale_y1( fx__, meta, line, line_context )
 											fx.scale_y = scale_y[ 1 ] or 1
 											if fx.scale_y <= 0 then
 												fx.scale_y = 0.1
@@ -1807,17 +1923,17 @@
 										offset_maxspace = scale_x[ 2 ] or 0
 										--variables de dominio de funciones--
 										if j == 1 then
-											s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-											s_i = s_i1( fx__, meta, line )
+											s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+											s_i = s_i1( fx__, meta, line, line_context )
 											fx.domain_i = s_i[ 1 ] or 0
-											s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-											s_f = s_f1( fx__, meta, line )
+											s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+											s_f = s_f1( fx__, meta, line, line_context )
 											fx.domain_f = s_f[ 1 ] or 1
 										end
 										local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 										--variables de funciones paramétricas--
-										fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-										fun_x = fun_x1( fx__, meta, line, s )
+										fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+										fun_x = fun_x1( fx__, meta, line, s, line_context )
 										local point_xy
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -1825,8 +1941,8 @@
 										else
 											fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 										end
-										fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-										fun_y = fun_y1( fx__, meta, line, s )
+										fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+										fun_y = fun_y1( fx__, meta, line, s, line_context )
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											fx.fun_y = point_xy.y * fx.scale_y
 										else
@@ -1845,8 +1961,8 @@
 										fx.pos_b = fx.pos_y + furi.height / 2
 										x, y = fx.pos_x, fx.pos_y
 										--variables de tamaño--
-										sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-										sizefx = sizefx1( fx__, meta, line, s )
+										sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+										sizefx = sizefx1( fx__, meta, line, s, line_context )
 										fx.sizex = L.scale_x
 										fx.sizey = L.scale_y
 										fx.tag_size = ""
@@ -1856,28 +1972,28 @@
 											fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 										end
 										--variables de alineación y de capa (layer)--
-										align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-										align = align1( fx__, meta, line, s )
+										align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+										align = align1( fx__, meta, line, s, line_context )
 										fx.align = ""
 										if #align > 0 then
 											fx.align = "\\an" .. align[ 1 ]
 										end
-										layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-										layer = layer1( fx__, meta, line, s )
+										layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+										layer = layer1( fx__, meta, line, s, line_context )
 										fx.layer = layer[ 1 ] or l_layer
 										--variables de posiciones definitivas, dependiendo del "move"--
-										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-										move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-										move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+										move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+										move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 										--variables de tiempo del movimiento--
 										fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 											function( time_HMS )
 												return tostring( HMS_to_ms( time_HMS ) )
 											end
 										)
-										move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-										move_t = move_t1( fx__, meta, line, s )
+										move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+										move_t = move_t1( fx__, meta, line, s, line_context )
 										fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 										fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 										tags_times = ""
@@ -1892,8 +2008,8 @@
 										-----------------------
 										fx.add_tags = ""
 										if fx__.language ~= "Automation Auto-4" then
-											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-											addtag = addtag1( fx__, meta, line, x, y )
+											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+											addtag = addtag1( fx__, meta, line, x, y, line_context )
 											for k, v in pairs( addtag ) do
 												if type( addtag[ k ] ) == "table" then
 													addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -1906,9 +2022,9 @@
 										fx.add_tags = tag.dark( fx.add_tags )
 										-----------------------
 										returnfx = { [ 1 ] = fx__.returnfx }
-										if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-											returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-											returnfx = returnfx1( fx__, meta, line )
+										if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+											returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+											returnfx = returnfx1( fx__, meta, line, line_context )
 										end
 										Rline = 1
 										if returnfx[ 2 ] == "random" then
@@ -2098,28 +2214,28 @@
 								effector.default_val( )
 								effector.effect_offset( ) --may 31st 2020
 								-----------------------------------------------
-								if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-									variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-									var_KEfx_ = variable_( fx__, meta, line, x, y )
+								if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+									variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+									var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 								end
-								variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+								variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 								if line.i == 1
 									and J == 1 then
-									var.once = remember( "var_once", variable_( fx__, meta, line, x, y ) )
+									var.once = remember( "var_once", variable_( fx__, meta, line, x, y, line_context ) )
 								else
 									var.once = recall.var_once
 								end
 								if J == 1 then
-									var.rep = variable_( fx__, meta, line, x, y )
+									var.rep = variable_( fx__, meta, line, x, y, line_context )
 								end
-								var.line = variable_( fx__, meta, line, x, y )
+								var.line = variable_( fx__, meta, line, x, y, line_context )
 								var.word, var.syl, var.furi, var.char = var.line, var.line, var.line, var.line
-								var.loop = variable_( fx__, meta, line, x, y )
+								var.loop = variable_( fx__, meta, line, x, y, line_context )
 								-----------------------------------------------
-								maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-								maxloop_fx = maxloop1( fx__, meta, line, x, y )
+								maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+								maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 								loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (line.width + 2 * L.outline) / (line.height + 2 * L.outline) )
-								maxloop_fx = maxloop1( fx__, meta, line, x, y )
+								maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 								fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 								fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 								fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -2127,7 +2243,41 @@
 								maxj = fx.maxloop_fx
 								-----------------------------------------------
 								while j <= fx.maxloop_fx do
-									var.loop = variable_( fx__, meta, line, x, y )
+								-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
+									var.loop = variable_( fx__, meta, line, x, y, line_context )
 									--variables de modulo--
 									module = (j - 1) / (maxj - 1)
 									if fx.maxloop_fx == 1 then
@@ -2138,48 +2288,48 @@
 										module2 = module
 									end
 									--variables de tiempo--
-									fx__.start_t = fx__.start_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
-										function( time_HMS )
-											return tostring( HMS_to_ms( time_HMS ) )
+										fx__.start_t = fx__.start_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
+											function( time_HMS )
+												return tostring( HMS_to_ms( time_HMS ) )
+											end
+										)
+										fx__.end_t = fx__.end_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
+											function( time_HMS )
+												return tostring( HMS_to_ms( time_HMS ) )
+											end
+										)
+										if fx__.start_t:match( "retime" ) then
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
+										else
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
+											fx.start_time = start_t[ 1 ] or line.start_time
+											l.start_time = fx.start_time
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
+											fx.end_time = end_t[ 1 ] or line.end_time
+											l.end_time = fx.end_time
+											fx.dur = fx.end_time - fx.start_time
 										end
-									)
-									fx__.end_t = fx__.end_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
-										function( time_HMS )
-											return tostring( HMS_to_ms( time_HMS ) )
-										end
-									)
-									if fx__.start_t:match( "retime" ) then
-										local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-										time_rtm = time_rtm( fx__, meta, line )
-									else
-										start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-										start_t	= start_t1( fx__, meta, line )
-										fx.start_time = start_t[ 1 ] or line.start_time
-										l.start_time = fx.start_time
-										end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-										end_t = end_t1( fx__, meta, line )
-										fx.end_time = end_t[ 1 ] or line.end_time
-										l.end_time = fx.end_time
-										fx.dur = fx.end_time - fx.start_time
-									end
 									---------------------------------------------------
 									--variables de punto de referencia--
-									center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-									center_x = center_x1( fx__, meta, line, x, y )
+									center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+									center_x = center_x1( fx__, meta, line, x, y, line_context )
 									fx.center_x = center_x[ 1 ] or val_center
-									center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-									center_y = center_y1( fx__, meta, line, x, y )
+									center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+									center_y = center_y1( fx__, meta, line, x, y, line_context )
 									fx.center_y = center_y[ 1 ] or val_middle
 									--variables de escalas de funciones paramétricas-- 
 									if j == 1 then
-										scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-										scale_x	= scale_x1( fx__, meta, line )
+										scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+										scale_x	= scale_x1( fx__, meta, line, line_context )
 										fx.scale_x = scale_x[ 1 ] or 1
 										if fx.scale_x <= 0 then
 											fx.scale_x = 0.1
 										end
-										scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-										scale_y	= scale_y1( fx__, meta, line )
+										scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+										scale_y	= scale_y1( fx__, meta, line, line_context )
 										fx.scale_y = scale_y[ 1 ] or 1
 										if fx.scale_y <= 0 then
 											fx.scale_y = 0.1
@@ -2188,18 +2338,18 @@
 									offset_maxspace = scale_x[ 2 ] or 0
 									--variables de dominio de funciones--
 									if j == 1 then
-										s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-										s_i = s_i1( fx__, meta, line )
+										s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+										s_i = s_i1( fx__, meta, line, line_context )
 										fx.domain_i = s_i[ 1 ] or 0
-										s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-										s_f = s_f1( fx__, meta, line )
+										s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+										s_f = s_f1( fx__, meta, line, line_context )
 										fx.domain_f = s_f[ 1 ] or 1
 									end
 									local
 									s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 									--variables de funciones paramétricas--
-									fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-									fun_x = fun_x1( fx__, meta, line, s )
+									fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+									fun_x = fun_x1( fx__, meta, line, s, line_context )
 									local point_xy
 									if table.type( { fun_x[ 1 ] } ) == "shape" then
 										point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -2207,8 +2357,8 @@
 									else
 										fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 									end
-									fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-									fun_y = fun_y1( fx__, meta, line, s )
+									fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+									fun_y = fun_y1( fx__, meta, line, s, line_context )
 									if table.type( { fun_x[ 1 ] } ) == "shape" then
 										fx.fun_y = point_xy.y * fx.scale_y
 									else
@@ -2227,8 +2377,8 @@
 									fx.pos_b = fx.pos_y + l.height / 2
 									x, y = fx.pos_x, fx.pos_y
 									--variables de tamaño--
-									sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-									sizefx = sizefx1( fx__, meta, line, s )
+									sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+									sizefx = sizefx1( fx__, meta, line, s, line_context )
 									fx.sizex = L.scale_x
 									fx.sizey = L.scale_y
 									fx.tag_size = ""
@@ -2238,28 +2388,28 @@
 										fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 									end
 									--variables de alineación y de capa (layer)--
-									align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-									align = align1( fx__, meta, line, s )
+									align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+									align = align1( fx__, meta, line, s, line_context )
 									fx.align = ""
 									if #align > 0 then
 										fx.align = "\\an" .. align[ 1 ]
 									end
-									layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-									layer = layer1( fx__, meta, line, s )
+									layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+									layer = layer1( fx__, meta, line, s, line_context )
 									fx.layer = layer[ 1 ] or l_layer
 									--variables de posiciones, dependiendo del "move"--
-									move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-									move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-									move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-									move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+									move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+									move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+									move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+									move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 									--variables de tiempo del movimiento--
 									fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 										function( time_HMS )
 											return tostring( HMS_to_ms( time_HMS ) )
 										end
 									)
-									move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-									move_t = move_t1( fx__, meta, line, s )
+									move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+									move_t = move_t1( fx__, meta, line, s, line_context )
 									fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 									fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 									tags_times = ""
@@ -2274,8 +2424,8 @@
 									-----------------------
 									fx.add_tags = ""
 									if fx__.language ~= "Automation Auto-4" then
-										addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-										addtag = addtag1( fx__, meta, line, x, y )
+										addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+										addtag = addtag1( fx__, meta, line, x, y, line_context )
 										for k, v in pairs( addtag ) do
 											if type( addtag[ k ] ) == "table" then
 												addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -2288,9 +2438,9 @@
 									fx.add_tags = tag.dark( fx.add_tags )
 									-----------------------
 									returnfx = { [ 1 ] = fx__.returnfx }
-									if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-										returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-										returnfx = returnfx1( fx__, meta, line )
+									if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+										returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+										returnfx = returnfx1( fx__, meta, line, line_context )
 									end
 									Rline = 1
 									if returnfx[ 2 ] == "random" then
@@ -2427,33 +2577,33 @@
 									effector.default_val( )
 									effector.effect_offset( ) --may 31st 2020
 									-----------------------------------------------
-									if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-										variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-										var_KEfx_ = variable_( fx__, meta, line, x, y )
+									if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+										variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+										var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 									end
-									variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+									variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 									if line.i == 1
 										and word.i == 1
 										and J == 1 then
-										var.once = remember( "var_once", variable_( fx__, meta, line, x, y ) )
+										var.once = remember( "var_once", variable_( fx__, meta, line, x, y, line_context ) )
 									else
 										var.once = recall.var_once
 									end
 									if word.i == 1
 										and J == 1 then
-										var.line = variable_( fx__, meta, line, x, y )
+										var.line = variable_( fx__, meta, line, x, y, line_context )
 									end
 									if J == 1 then
-										var.rep = variable_( fx__, meta, line, x, y )
+										var.rep = variable_( fx__, meta, line, x, y, line_context )
 									end
-									var.word = variable_( fx__, meta, line, x, y )
+									var.word = variable_( fx__, meta, line, x, y, line_context )
 									var.syl, var.furi, var.char = var.word, var.word, var.word
-									var.loop = variable_( fx__, meta, line, x, y )
+									var.loop = variable_( fx__, meta, line, x, y, line_context )
 									-----------------------------------------------
-									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (word.width + 2 * L.outline) / (word.height + 2 * L.outline) )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 									fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 									fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -2461,7 +2611,41 @@
 									maxj = fx.maxloop_fx
 									-----------------------------------------------
 									while j <= fx.maxloop_fx do
-										var.loop = variable_( fx__, meta, line, x, y )
+									-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
+										var.loop = variable_( fx__, meta, line, x, y, line_context )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
 										if fx.maxloop_fx == 1 then
@@ -2487,15 +2671,15 @@
 											end
 										)
 										if fx__.start_t:match( "retime" ) then
-											local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-											time_rtm = time_rtm( fx__, meta, line )
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
 										else
-											start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-											start_t	= start_t1( fx__, meta, line )
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
 											fx.start_time = start_t[ 1 ] or line.start_time
 											l.start_time = fx.start_time
-											end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-											end_t = end_t1( fx__, meta, line )
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
 											fx.end_time = end_t[ 1 ] or line.end_time
 											l.end_time = fx.end_time
 											fx.dur = fx.end_time - fx.start_time
@@ -2507,22 +2691,22 @@
 										word.word_start = ini + word.start_time
 										word.word_end = word.word_start + word.dur
 										--variables de punto de referencia--
-										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-										center_x = center_x1( fx__, meta, line, x, y )
+										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+										center_x = center_x1( fx__, meta, line, x, y, line_context )
 										fx.center_x = center_x[ 1 ] or val_center
-										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-										center_y = center_y1( fx__, meta, line, x, y )
+										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+										center_y = center_y1( fx__, meta, line, x, y, line_context )
 										fx.center_y = center_y[ 1 ] or val_middle
 										--variables de escalas de funciones paramétricas-- 
 										if j == 1 then
-											scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-											scale_x	= scale_x1( fx__, meta, line )
+											scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+											scale_x	= scale_x1( fx__, meta, line, line_context )
 											fx.scale_x = scale_x[ 1 ] or 1
 											if fx.scale_x <= 0 then
 												fx.scale_x = 0.1
 											end
-											scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-											scale_y	= scale_y1( fx__, meta, line )
+											scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+											scale_y	= scale_y1( fx__, meta, line, line_context )
 											fx.scale_y = scale_y[ 1 ] or 1
 											if fx.scale_y <= 0 then
 												fx.scale_y = 0.1
@@ -2531,17 +2715,17 @@
 										offset_maxspace = scale_x[ 2 ] or 0
 										--variables de dominio de funciones--
 										if j == 1 then
-											s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-											s_i = s_i1( fx__, meta, line )
+											s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+											s_i = s_i1( fx__, meta, line, line_context )
 											fx.domain_i = s_i[ 1 ] or 0
-											s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-											s_f = s_f1( fx__, meta, line )
+											s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+											s_f = s_f1( fx__, meta, line, line_context )
 											fx.domain_f = s_f[ 1 ] or 1
 										end
 										local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 										--variables de funciones paramétricas--
-										fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-										fun_x = fun_x1( fx__, meta, line, s )
+										fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+										fun_x = fun_x1( fx__, meta, line, s, line_context )
 										local point_xy
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -2549,8 +2733,8 @@
 										else
 											fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 										end
-										fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-										fun_y = fun_y1( fx__, meta, line, s )
+										fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+										fun_y = fun_y1( fx__, meta, line, s, line_context )
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											fx.fun_y = point_xy.y * fx.scale_y
 										else
@@ -2569,8 +2753,8 @@
 										fx.pos_b = fx.pos_y + word.height / 2
 										x, y = fx.pos_x, fx.pos_y
 										--variables de tamaño--
-										sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-										sizefx = sizefx1( fx__, meta, line, s )
+										sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+										sizefx = sizefx1( fx__, meta, line, s, line_context )
 										fx.sizex = L.scale_x
 										fx.sizey = L.scale_y
 										fx.tag_size = ""
@@ -2580,28 +2764,28 @@
 											fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 										end
 										--variables de alineación y de capa (layer)--
-										align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-										align = align1( fx__, meta, line, s )
+										align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+										align = align1( fx__, meta, line, s, line_context )
 										fx.align = ""
 										if #align > 0 then
 											fx.align = "\\an" .. align[ 1 ]
 										end
-										layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-										layer = layer1( fx__, meta, line, s )
+										layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+										layer = layer1( fx__, meta, line, s, line_context )
 										fx.layer = layer[ 1 ] or l_layer
 										--variables de posiciones, dependiendo del "move"--
-										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-										move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-										move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+										move_x11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+										move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+										move_y11 = loadstring( format( "return function( fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+										move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 										--variables de tiempo del movimiento--
 										fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 											function( time_HMS )
 												return tostring( HMS_to_ms( time_HMS ) )
 											end
 										)
-										move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-										move_t = move_t1( fx__, meta, line, s )
+										move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+										move_t = move_t1( fx__, meta, line, s, line_context )
 										fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 										fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 										tags_times = ""
@@ -2616,8 +2800,8 @@
 										-----------------------
 										fx.add_tags = ""
 										if fx__.language ~= "Automation Auto-4" then
-											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-											addtag = addtag1( fx__, meta, line, x, y )
+											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+											addtag = addtag1( fx__, meta, line, x, y, line_context )
 											for k, v in pairs( addtag ) do
 												if type( addtag[ k ] ) == "table" then
 													addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -2630,9 +2814,9 @@
 										fx.add_tags = tag.dark( fx.add_tags )
 										-----------------------
 										returnfx = { [ 1 ] = fx__.returnfx }
-										if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-											returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-											returnfx = returnfx1( fx__, meta, line )
+										if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+											returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+											returnfx = returnfx1( fx__, meta, line, line_context )
 										end
 										Rline = 1
 										if returnfx[ 2 ] == "random" then
@@ -2766,35 +2950,35 @@
 									effector.default_val( )
 									effector.effect_offset( ) --may 31st 2020
 									-----------------------------------------------
-									if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-										variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-										var_KEfx_ = variable_( fx__, meta, line, x, y )
+									if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+										variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+										var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 									end
-									variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+									variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 									if line.i == 1
 										and char.i == 1
 										and J == 1 then
-										var.once = remember( "var_once", variable_( fx__, meta, line, x, y ) )
+										var.once = remember( "var_once", variable_( fx__, meta, line, x, y, line_context ) )
 									else
 										var.once = recall.var_once
 									end
 									if char.i == 1
 										and J == 1 then
-										var.line = variable_( fx__, meta, line, x, y )
+										var.line = variable_( fx__, meta, line, x, y, line_context )
 									end
 									if J == 1 then
-										var.rep = variable_( fx__, meta, line, x, y )
+										var.rep = variable_( fx__, meta, line, x, y, line_context )
 									end
-									var.word = variable_( fx__, meta, line, x, y )
-									var.char = variable_( fx__, meta, line, x, y )
+									var.word = variable_( fx__, meta, line, x, y, line_context )
+									var.char = variable_( fx__, meta, line, x, y, line_context )
 									var.syl, var.furi = var.char, var.char
-									var.loop = variable_( fx__, meta, line, x, y )
+									var.loop = variable_( fx__, meta, line, x, y, line_context )
 									text.char_size( )
 									-----------------------------------------------
-									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (char.width + 2 * L.outline) / (char.height + 2 * L.outline) )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 									fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 									fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -2802,6 +2986,40 @@
 									maxj = fx.maxloop_fx
 									-----------------------------------------------
 									while j <= fx.maxloop_fx do
+									-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
 										var.loop = variable_( fx__, meta, syl, line, x, y )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
@@ -2829,15 +3047,15 @@
 											end
 										)
 										if fx__.start_t:match( "retime" ) then
-											local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-											time_rtm = time_rtm( fx__, meta, line )
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
 										else
-											start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-											start_t	= start_t1( fx__, meta, line )
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
 											fx.start_time = start_t[ 1 ] or line.start_time
 											l.start_time = fx.start_time
-											end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-											end_t = end_t1( fx__, meta, line )
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
 											fx.end_time = end_t[ 1 ] or line.end_time
 											l.end_time = fx.end_time
 											fx.dur = fx.end_time - fx.start_time
@@ -2848,22 +3066,22 @@
 										char.char_start = ini + char.start_time
 										char.char_end = char.char_start + char.dur
 										--variables de punto de referencia--
-										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-										center_x = center_x1( fx__, meta, line, x, y )
+										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+										center_x = center_x1( fx__, meta, line, x, y, line_context )
 										fx.center_x = center_x[ 1 ] or val_center
-										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-										center_y = center_y1( fx__, meta, line, x, y )
+										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+										center_y = center_y1( fx__, meta, line, x, y, line_context )
 										fx.center_y = center_y[ 1 ] or val_middle
 										--variables de escalas de funciones paramétricas-- 
 										if j == 1 then
-											scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-											scale_x	= scale_x1( fx__, meta, line )
+											scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+											scale_x	= scale_x1( fx__, meta, line, line_context )
 											fx.scale_x = scale_x[ 1 ] or 1
 											if fx.scale_x <= 0 then
 												fx.scale_x = 0.1
 											end
-											scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-											scale_y	= scale_y1( fx__, meta, line )
+											scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+											scale_y	= scale_y1( fx__, meta, line, line_context )
 											fx.scale_y = scale_y[ 1 ] or 1
 											if fx.scale_y <= 0 then
 												fx.scale_y = 0.1
@@ -2872,17 +3090,17 @@
 										offset_maxspace = scale_x[ 2 ] or 0
 										--variables de dominio de funciones--
 										if j == 1 then
-											s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-											s_i = s_i1( fx__, meta, line )
+											s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+											s_i = s_i1( fx__, meta, line, line_context )
 											fx.domain_i = s_i[ 1 ] or 0
-											s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-											s_f = s_f1( fx__, meta, line )
+											s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+											s_f = s_f1( fx__, meta, line, line_context )
 											fx.domain_f = s_f[ 1 ] or 1
 										end
 										local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 										--variables de funciones paramétricas--
-										fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-										fun_x = fun_x1( fx__, meta, line, s )
+										fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+										fun_x = fun_x1( fx__, meta, line, s, line_context )
 										local point_xy
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -2890,8 +3108,8 @@
 										else
 											fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 										end
-										fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-										fun_y = fun_y1( fx__, meta, line, s )
+										fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+										fun_y = fun_y1( fx__, meta, line, s, line_context )
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											fx.fun_y = point_xy.y * fx.scale_y
 										else
@@ -2910,8 +3128,8 @@
 										fx.pos_b = fx.pos_y + char.height / 2
 										x, y = fx.pos_x, fx.pos_y
 										--variables de tamaño--
-										sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-										sizefx = sizefx1( fx__, meta, line, s )
+										sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+										sizefx = sizefx1( fx__, meta, line, s, line_context )
 										fx.sizex = L.scale_x
 										fx.sizey = L.scale_y
 										fx.tag_size = ""
@@ -2921,28 +3139,28 @@
 											fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 										end
 										--variables de alineación y de capa (layer)--
-										align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-										align = align1( fx__, meta, line, s )
+										align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+										align = align1( fx__, meta, line, s, line_context )
 										fx.align = ""
 										if #align > 0 then
 											fx.align = "\\an" .. align[ 1 ]
 										end
-										layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-										layer = layer1( fx__, meta, line, s )
+										layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+										layer = layer1( fx__, meta, line, s, line_context )
 										fx.layer = layer[ 1 ] or l_layer
 										--variables de posiciones, dependiendo del "move"--
-										move_x11 = loadstring( format( "return function(fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-										move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-										move_y11 = loadstring( format( "return function(fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-										move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+										move_x11 = loadstring( format( "return function(fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+										move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+										move_y11 = loadstring( format( "return function(fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+										move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 										--variables de tiempo del movimiento--
 										fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 											function( time_HMS )
 												return tostring( HMS_to_ms( time_HMS ) )
 											end
 										)
-										move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-										move_t = move_t1( fx__, meta, line, s )
+										move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+										move_t = move_t1( fx__, meta, line, s, line_context )
 										fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 										fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 										tags_times = ""
@@ -2957,8 +3175,8 @@
 										-----------------------
 										fx.add_tags = ""
 										if fx__.language ~= "Automation Auto-4" then
-											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-											addtag = addtag1( fx__, meta, line, x, y )
+											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+											addtag = addtag1( fx__, meta, line, x, y, line_context )
 											for k, v in pairs( addtag ) do
 												if type( addtag[ k ] ) == "table" then
 													addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -2971,9 +3189,9 @@
 										fx.add_tags = tag.dark( fx.add_tags )
 										-----------------------
 										returnfx = { [ 1 ] = fx__.returnfx }
-										if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-											returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-											returnfx = returnfx1( fx__, meta, line )
+										if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+											returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+											returnfx = returnfx1( fx__, meta, line, line_context )
 										end
 										Rline = 1
 										if returnfx[ 2 ] == "random" then
@@ -3116,38 +3334,38 @@
 									effector.default_val( )
 									effector.effect_offset( ) --may 31st 2020
 									-----------------------------------------------
-									if pcall( loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
-										variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
-										var_KEfx_ = variable_( fx__, meta, line, x, y )
+									if pcall( loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) ) ) == true then
+										variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) %s return \"\" end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+										var_KEfx_ = variable_( fx__, meta, line, x, y, line_context )
 									end
-									variable_ = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
+									variable_ = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( tag.tonumber_variable( fx__.variable ) ) ) )( )
 									if line.i == 1
 										and char.i == 1
 										and J == 1 then
-										var.once = remember( "var_once", variable_( fx__, meta, line, x, y ) )
+										var.once = remember( "var_once", variable_( fx__, meta, line, x, y, line_context ) )
 									else
 										var.once = recall.var_once
 									end
 									if char.i == 1
 										and J == 1 then
-										var.line = variable_( fx__, meta, line, x, y )
+										var.line = variable_( fx__, meta, line, x, y, line_context )
 									end
 									if wordchar.i == 1
 										and J == 1 then
-										var.word = variable_( fx__, meta, line, x, y )
+										var.word = variable_( fx__, meta, line, x, y, line_context )
 									end
 									if J == 1 then
-										var.rep = variable_( fx__, meta, line, x, y )
+										var.rep = variable_( fx__, meta, line, x, y, line_context )
 									end
-									var.char = variable_( fx__, meta, line, x, y )
+									var.char = variable_( fx__, meta, line, x, y, line_context )
 									var.syl, var.furi = var.char, var.char
-									var.loop = variable_( fx__, meta, line, x, y )
+									var.loop = variable_( fx__, meta, line, x, y, line_context )
 									text.char_size( )
 									-----------------------------------------------
-									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.loops ) ) )( )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									loop_h = ceil( (maxloop_fx[ 1 ] or 1) * (char.width + 2 * L.outline) / (char.height + 2 * L.outline) )
-									maxloop_fx = maxloop1( fx__, meta, line, x, y )
+									maxloop_fx = maxloop1( fx__, meta, line, x, y, line_context )
 									fx.loop_v = ceil( maxloop_fx[ 1 ] or 1 )
 									fx.loop_h = ceil( maxloop_fx[ 2 ] or 1 )
 									fx.loop_3 = ceil( maxloop_fx[ 3 ] or 1 )
@@ -3155,6 +3373,40 @@
 									maxj = fx.maxloop_fx
 									-----------------------------------------------
 									while j <= fx.maxloop_fx do
+									-- [PUENTE DE CONTEXTO]
+									if ke and ke.infofx then
+										-- Datos Globales
+										ke.infofx.xres = xres
+										ke.infofx.yres = yres
+										ke.infofx.frame_dur = frame_dur
+										ke.infofx.ratio = ratio
+										
+										-- Contexto de la Línea
+										ke.infofx.l = l
+										ke.infofx.line = line
+										ke.infofx.meta = meta
+										
+										-- Unidades
+										ke.infofx.syl = syl
+										ke.infofx.word = word
+										ke.infofx.char = char
+										ke.infofx.furi = furi
+										
+										-- Iteración
+										ke.infofx.j = j
+										ke.infofx.maxj = maxj
+										ke.infofx.J = J
+										ke.infofx.maxJ = maxJ
+										
+										-- Estado calculado del efecto
+										ke.infofx.fx = fx
+										
+										-- Utilidades globales
+										ke.infofx.idx_line = idx_line 
+										ke.infofx.linefx = linefx
+										ke.infofx.ii = ii
+									end
+									-- [FIN DEL PUENTE]
 										ci = 0
 										var.loop = variable_( fx__, meta, syl, line, x, y )
 										--variables de modulo--
@@ -3189,15 +3441,15 @@
 											end
 										)
 										if fx__.start_t:match( "retime" ) then
-											local time_rtm = loadstring( format( "return function( fx__, meta, line ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
-											time_rtm = time_rtm( fx__, meta, line )
+											local time_rtm = loadstring( format( "return function( fx__, meta, line, module, line_context ) return %s end", tag.tonumber( fx__.start_t ) ) )( )
+											time_rtm = time_rtm( fx__, meta, line, module, line_context )
 										else
-											start_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
-											start_t	= start_t1( fx__, meta, line )
+											start_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.start_t ) ) )( )
+											start_t	= start_t1( fx__, meta, line, module, line_context )
 											fx.start_time = start_t[ 1 ] or line.start_time
 											l.start_time = fx.start_time
-											end_t1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
-											end_t = end_t1( fx__, meta, line )
+											end_t1 = loadstring( format( "return function( fx__, meta, line, module, line_context ) return { %s } end", tag.tonumber( fx__.end_t ) ) )( )
+											end_t = end_t1( fx__, meta, line, module, line_context )
 											fx.end_time = end_t[ 1 ] or line.end_time
 											l.end_time = fx.end_time
 											fx.dur = fx.end_time - fx.start_time
@@ -3211,22 +3463,22 @@
 										char.char_start = ini + char.start_time
 										char.char_end = char.char_start + char.dur
 										--variables de punto de referencia--
-										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
-										center_x = center_x1( fx__, meta, line, x, y )
+										center_x1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_x ) ) )( )
+										center_x = center_x1( fx__, meta, line, x, y, line_context )
 										fx.center_x = center_x[ 1 ] or val_center
-										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
-										center_y = center_y1( fx__, meta, line, x, y )
+										center_y1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.tonumber( fx__.center_y ) ) )( )
+										center_y = center_y1( fx__, meta, line, x, y, line_context )
 										fx.center_y = center_y[ 1 ] or val_middle
 										--variables de escalas de funciones paramétricas-- 
 										if j == 1 then
-											scale_x1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
-											scale_x	= scale_x1( fx__, meta, line )
+											scale_x1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_x ) ) )( )
+											scale_x	= scale_x1( fx__, meta, line, line_context )
 											fx.scale_x = scale_x[ 1 ] or 1
 											if fx.scale_x <= 0 then
 												fx.scale_x = 0.1
 											end
-											scale_y1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
-											scale_y	= scale_y1( fx__, meta, line )
+											scale_y1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.scale_y ) ) )( )
+											scale_y	= scale_y1( fx__, meta, line, line_context )
 											fx.scale_y = scale_y[ 1 ] or 1
 											if fx.scale_y <= 0 then
 												fx.scale_y = 0.1
@@ -3235,17 +3487,17 @@
 										offset_maxspace = scale_x[ 2 ] or 0
 										--variables de dominio de funciones--
 										if j == 1 then
-											s_i1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
-											s_i = s_i1( fx__, meta, line )
+											s_i1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_i ) ) )( )
+											s_i = s_i1( fx__, meta, line, line_context )
 											fx.domain_i = s_i[ 1 ] or 0
-											s_f1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
-											s_f = s_f1( fx__, meta, line )
+											s_f1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.tonumber( fx__.s_f ) ) )( )
+											s_f = s_f1( fx__, meta, line, line_context )
 											fx.domain_f = s_f[ 1 ] or 1
 										end
 										local s = fx.domain_i + module * (fx.domain_f - fx.domain_i)
 										--variables de funciones paramétricas--
-										fun_x1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
-										fun_x = fun_x1( fx__, meta, line, s )
+										fun_x1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_x ) ) )( )
+										fun_x = fun_x1( fx__, meta, line, s, line_context )
 										local point_xy
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											point_xy = shape.parametric( fun_x[ 1 ], s_i[ 1 ] )
@@ -3253,8 +3505,8 @@
 										else
 											fx.fun_x = (fun_x[ 1 ] or 0) * fx.scale_x
 										end
-										fun_y1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
-										fun_y = fun_y1( fx__, meta, line, s )
+										fun_y1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.fun_y ) ) )( )
+										fun_y = fun_y1( fx__, meta, line, s, line_context )
 										if table.type( { fun_x[ 1 ] } ) == "shape" then
 											fx.fun_y = point_xy.y * fx.scale_y
 										else
@@ -3273,8 +3525,8 @@
 										fx.pos_b = fx.pos_y + char.height / 2
 										x, y = fx.pos_x, fx.pos_y
 										--variables de tamaño--
-										sizefx1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
-										sizefx = sizefx1( fx__, meta, line, s )
+										sizefx1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.size ) ) )( )
+										sizefx = sizefx1( fx__, meta, line, s, line_context )
 										fx.sizex = L.scale_x
 										fx.sizey = L.scale_y
 										fx.tag_size = ""
@@ -3284,28 +3536,28 @@
 											fx.tag_size = format( "\\fscx%s\\fscy%s", fx.sizex, fx.sizey )
 										end
 										--variables de alineación y de capa (layer)--
-										align1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
-										align = align1( fx__, meta, line, s )
+										align1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.align ) ) )( )
+										align = align1( fx__, meta, line, s, line_context )
 										fx.align = ""
 										if #align > 0 then
 											fx.align = "\\an" .. align[ 1 ]
 										end
-										layer1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
-										layer = layer1( fx__, meta, line, s )
+										layer1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.layer ) ) )( )
+										layer = layer1( fx__, meta, line, s, line_context )
 										fx.layer = layer[ 1 ] or l_layer
 										--variables de posiciones, dependiendo del "move"--
-										move_x11 = loadstring( format( "return function(fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
-										move_x = math.round( move_x11( fx__, meta, line, x, y, s ), 2 )
-										move_y11 = loadstring( format( "return function(fx__, meta, line, x, y, s ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
-										move_y = math.round( move_y11( fx__, meta, line, x, y, s ), 2 )
+										move_x11 = loadstring( format( "return function(fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_x ) ) )( )
+										move_x = math.round( move_x11( fx__, meta, line, x, y, s, line_context ), 2 )
+										move_y11 = loadstring( format( "return function(fx__, meta, line, x, y, s, line_context ) return { %s } end", tag.tonumber( fx__.move_y ) ) )( )
+										move_y = math.round( move_y11( fx__, meta, line, x, y, s, line_context ), 2 )
 										--variables de tiempo del movimiento--
 										fx__.move_t = fx__.move_t:gsub( "(%d+%:%d+%:%d+%.%d+)",
 											function( time_HMS )
 												return tostring( HMS_to_ms( time_HMS ) )
 											end
 										)
-										move_t1 = loadstring( format( "return function( fx__, meta, line, s ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
-										move_t = move_t1( fx__, meta, line, s )
+										move_t1 = loadstring( format( "return function( fx__, meta, line, s, line_context ) return { %s } end", tag.tonumber( fx__.move_t ) ) )( )
+										move_t = move_t1( fx__, meta, line, s, line_context )
 										fx.movet_i = math.round( move_t[ 1 ] or 0, 2 )
 										fx.movet_f = math.round( move_t[ 2 ] or fx.dur, 2 )
 										tags_times = ""
@@ -3320,8 +3572,8 @@
 										-----------------------
 										fx.add_tags = ""
 										if fx__.language ~= "Automation Auto-4" then
-											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
-											addtag = addtag1( fx__, meta, line, x, y )
+											addtag1 = loadstring( format( "return function( fx__, meta, line, x, y, line_context ) return { %s } end", tag.HTML_to_ass( fx__.addtag ) ) )( )
+											addtag = addtag1( fx__, meta, line, x, y, line_context )
 											for k, v in pairs( addtag ) do
 												if type( addtag[ k ] ) == "table" then
 													addtag[ k ] = table.view( addtag[ k ], format( "Add_Tags_%s_table", k ) )
@@ -3334,9 +3586,9 @@
 										fx.add_tags = tag.dark( fx.add_tags )
 										-----------------------
 										returnfx = { [ 1 ] = fx__.returnfx }
-										if pcall( loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
-											returnfx1 = loadstring( format( "return function( fx__, meta, line ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
-											returnfx = returnfx1( fx__, meta, line )
+										if pcall( loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) ) ) == true then
+											returnfx1 = loadstring( format( "return function( fx__, meta, line, line_context ) return { %s } end", tag.HTML_to_ass( fx__.returnfx ) ) )( )
+											returnfx = returnfx1( fx__, meta, line, line_context )
 										end
 										Rline = 1
 										if returnfx[ 2 ] == "random" then
@@ -7533,6 +7785,6 @@
 	end
 	
 	--==================================================================================================================--
-	aegisub.register_macro( script_name .. " " .. script_version .. script_update, script_description, effector.macro_fx )
-	aegisub.register_filter( script_name .. " " .. script_version .. script_update, "", 2000, effector.macro_fx )
+	aegisub.register_macro( script_name .. " " .. script_version, script_description, effector.macro_fx )
+	aegisub.register_filter( script_name .. " " .. script_version, "", 2000, effector.macro_fx )
 	--==================================================================================================================--

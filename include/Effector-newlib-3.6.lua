@@ -21,15 +21,12 @@
 	--> [Discord]  Kara Effector: discord.gg/YFP2zeY
 	-->	http://www.facebook.com/karaeffector
 	--> http://www.karaeffector.blogspot.com
-
-	--> https://x.com/SeijitsuSubs
-	--> [Discord] @trotacalles
 	
 	-- Effector-newlib-3.6.lua -------------------------------------------------------------------------------------
 	Effector_NewLib_authors  = "Itachi Akatsuki"
 	Effector_NewLib_testers  = "NatsuoKE & Vict8r"
 	Effector_NewLib_version  = "1.0"
-	Effector_NewLib_modified = "September 19th 2025 by Seijitsu_Subs"
+	Effector_NewLib_modified = "January 12th 2019"
 	----------------------------------------------------------------------------------------------------------------
   
 	--[[ tag.create_clip_grid
@@ -43,37 +40,44 @@
     - box (tabla): Tabla {x, y, w, h} que define el área total a recortar.
     - mode (número, opcional): Orden de barrido. 79 (defecto) = I-D, A-A. 71 = A-A, I-D.
     - is_inverse (booleano, opcional): true para \iclip, false (defecto) para \clip.
+    - overlap (número o tabla, opcional): Píxeles de solapamiento. Puede ser un número para un overlap uniforme,
+      o una tabla {overlap_x, overlap_y} para un control independiente. Por defecto es 0.
 
   Retorna:
     - Un string con el tag \clip o \iclip generado.
 ]]
 
-function tag.create_clip_grid(current_index, cols, rows, box, mode, is_inverse)
-	-- Validar y establecer valores por defecto
+function tag.create_clip_grid(current_index, cols, rows, box, mode, is_inverse, overlap)
+
 	local i = current_index or 1
 	local c = cols or 1
 	local r = rows or 1
 	local m = mode or 79
 	local inv = is_inverse or false
 	local b = box or { x = 0, y = 0, w = xres, h = yres }
+	local overlap_x = 0
+	local overlap_y = 0
+	if type(overlap) == "number" then
+		overlap_x = overlap
+		overlap_y = overlap
+	elseif type(overlap) == "table" then
+		overlap_x = overlap[1] or 0
+		overlap_y = overlap[2] or overlap_x
+	end
 
-	-- Calcular tamaño de cada celda
-	local cell_w = b.w / c
+    local cell_w = b.w / c
 	local cell_h = b.h / r
+    local col_idx, row_idx = 0, 0
 
-	-- Calcular fila y columna
-	local col_idx, row_idx = 0, 0
-	
-	-- Basado en la lógica de effector.do_fx para los diferentes modos de barrido
 	if m == 13 or m == 17 or m == 31 or m == 39 or m == 71 or m == 79 or m == 93 or m == 97 then
-		if m == 17 or m == 39 or m == 71 or m == 93 then -- Barrido Vertical Primero
+		if m == 17 or m == 39 or m == 71 or m == 93 then
 			col_idx = math.floor((i - 1) / r)
 			row_idx = (i - 1) % r
-		else -- Barrido Horizontal Primero
+		else
 			col_idx = (i - 1) % c
 			row_idx = math.floor((i - 1) / c)
 		end
-		-- Revertir dirección para modos específicos
+
 		if m == 31 or m == 39 or m == 93 or m == 97 then
 			col_idx = c - 1 - col_idx
 		end
@@ -81,22 +85,19 @@ function tag.create_clip_grid(current_index, cols, rows, box, mode, is_inverse)
 			row_idx = r - 1 - row_idx
 		end
 	else
-		-- Por defecto para modos no estándar (como 5, 7, etc.), usar el modo 79
+
 		col_idx = (i - 1) % c
 		row_idx = math.floor((i - 1) / c)
 	end
 
-	-- Calcular coordenadas
-	local cx1 = b.x + col_idx * cell_w
-	local cy1 = b.y + row_idx * cell_h
-	local cx2 = cx1 + cell_w
-	local cy2 = cy1 + cell_h
-	
-	-- Construir y devolver el tag
+	local cx1 = b.x + col_idx * cell_w - overlap_x
+	local cy1 = b.y + row_idx * cell_h - overlap_y
+	local cx2 = b.x + (col_idx + 1) * cell_w + overlap_x
+	local cy2 = b.y + (row_idx + 1) * cell_h + overlap_y
+
 	local tag_type = inv and "iclip" or "clip"
-	
-	-- Se redondean los valores para asegurar que el formato sea correcto
-	return string.format("\\%s(%s,%s,%s,%s)", tag_type, math.round(cx1,2), math.round(cy1,2), math.round(cx2,2), math.round(cy2,2))
+
+	return string.format("\\%s(%d,%d,%d,%d)", tag_type, math.round(cx1,2), math.round(cy1,2), math.round(cx2,2), math.round(cy2,2))
 end
 
 --------------------------------------------------
@@ -111,69 +112,81 @@ function color.gradient( pct, ... )
 		colors = ...
 	end
 
-	-- Casos base: si no hay colores o solo hay uno, no se puede interpolar.
-	if #colors < 1 then return "&H000000&" end -- Retorna negro si no se proveen colores
-	if #colors == 1 then return color.ass(colors[1]) end -- Retorna el único color provisto
+	if #colors < 1 then return "&H000000&" end
+	if #colors == 1 then return color.ass(colors[1]) end
 
-	-- Asegura que pct esté en el rango [0, 1]
 	local pct = math.clamp( pct or 0, 0, 1 )
-
-	-- Calcula en qué segmento del gradiente se encuentra el pct.
-	-- Por ejemplo, con 4 colores, hay 3 segmentos. Un pct de 0.6 se encuentra en el segundo segmento (entre el color 2 y 3).
 	local position = pct * (#colors - 1)
-	
-	-- Determina los dos colores que rodean la posición.
 	local index_start = math.floor(position) + 1
-	local index_end = math.min(index_start + 1, #colors) -- math.min para evitar irse fuera de los límites si pct es 1.0
-
-	-- Calcula el porcentaje local *dentro* de ese segmento específico.
-	-- Por ejemplo, si estamos en el 50% del camino entre el color 2 y 3, local_pct será 0.5.
+	local index_end = math.min(index_start + 1, #colors)
 	local local_pct = position - math.floor(position)
 	if local_pct == 0 and pct == 1.0 then
-		-- Caso especial para cuando pct es exactamente 1, para asegurar que se use el último color.
 		return color.ass(colors[#colors])
 	end
 
 	local color1 = color.ass( colors[index_start] )
 	local color2 = color.ass( colors[index_end] )
 
-	-- Usa la función de interpolación existente para el segmento final.
 	return color.interpolate(local_pct, color1, color2)
-end
+	end
+
+--------------------------------------------------
 
 -- Asegura que Calculate existe.
-Calculate = Calculate or {}
+calculate = calculate or {}
 
-function calculate.extratime(ctx, progression_per_char, fade_duration, start_delay, end_delay, desired_gap, max_added_time)
-    -- Asignación de valores por defecto si no se proporcionan.
-    local start_delay = start_delay or 250
-    local end_delay = end_delay or 250
-    local desired_gap = desired_gap or 50
-    local max_added_time = max_added_time or 800
-    
-    -- Comprobar si es la última línea de la SELECCIÓN.
-    if ctx.line.i >= ctx.line.n then
-        return 0
+function calculate.avg_char_width(char_widths_table, text_string)
+    local non_space_widths = {}
+    local text_chars = {}
+    for c in unicode.chars(text_string) do
+        table.insert(text_chars, c)
     end
 
-    -- Obtener las propiedades de la siguiente línea en la SELECCIÓN.
-    local next_line_index_in_file = ctx.idx_line[ctx.l_counter + 1]
-    local next_line_index_in_linefx = next_line_index_in_file + ctx.count_line_dialogue - ctx.ini_line
-    local next_line = ctx.linefx[next_line_index_in_linefx]
+    if #char_widths_table ~= #text_chars then return 15 end
+
+    for i=1, #char_widths_table do
+        if text_chars[i] ~= " " then
+            table.insert(non_space_widths, char_widths_table[i])
+        end
+    end
+
+    if #non_space_widths == 0 then
+        return 15
+    end
     
-    -- Calcular el fin real de la animación actual.
-    local actual_animation_end_time = ctx.l.end_time + end_delay + fade_duration
+    return table.op(non_space_widths, "average")
+end
+
+function calculate.synchronized_extratime(line_context, progression_const, fade_dur, avg_char_width, max_added_time)
+    progression_const = progression_const or 0
+    fade_dur = fade_dur or 0
+    avg_char_width = avg_char_width or 15
+    max_added_time = max_added_time or 2000
+    local line = line_context.line
+    local l = line_context.l
+    local linefx = line_context.linefx
+    local idx_line = line_context.idx_line
+    local count_line_dialogue = line_context.count_line_dialogue
+    local ini_line = line_context.ini_line
+    local current_char_count = unicode.len((line.text_stripped:gsub(" ", "")))
+    local P2_current = progression_const * (current_char_count > 1 and current_char_count - 1 or 0)
     
-    -- Calcular el inicio real de la animación siguiente.
-    local next_animation_start_time = next_line.start_time - start_delay
-    
-    -- Calcular el "Gap" actual.
-    local current_gap = next_animation_start_time - actual_animation_end_time
-    
-    -- Calcular el tiempo extra necesario.
-    local extra_time_needed = current_gap - desired_gap
-    
-    -- Aplicar restricciones.
+    if line.i >= line.n then
+        return P2_current
+    end
+
+    local next_line_index_in_selection = line.i + 1
+    local next_line_index_in_file = idx_line[next_line_index_in_selection]
+    local next_line_index_in_linefx = next_line_index_in_file + count_line_dialogue - ini_line
+    local next_line = linefx[next_line_index_in_linefx]
+    if not next_line then return P2_current end
+    local next_line_char_count = unicode.len((next_line.text_stripped:gsub(" ", "")))
+    local P2_next = progression_const * (next_line_char_count > 1 and next_line_char_count - 1 or 0)
+    local transition_duration = (P2_current + P2_next) / 2
+    local spatial_jump = next_line.left - line.right
+    local spatial_compensation_time = (spatial_jump > 0) and ((spatial_jump / avg_char_width) * progression_const) or 0
+    local ideal_end_time = next_line.start_time + transition_duration + spatial_compensation_time - fade_dur
+    local extra_time_needed = ideal_end_time - l.end_time
     local final_extra_time = math.min(max_added_time, math.max(0, extra_time_needed))
     
     return final_extra_time
@@ -181,12 +194,19 @@ end
 
 -- Ejemplo de uso:
 -- Casilla end_time:
--- l.end_time + delay2 + Calculate.ExtraTime(line_context, progression_const, fade_dur)
+-- l.end_time + delay2 + calculate.extratime(line_context, progression_const, fade_dur)
 -- Casilla variable:
 -- progression_const = 35;
 -- fade_dur = 150;
 -- delay2 = 250;
--- ctx es extraído de Effector-3.6.lua
-
+-- line_context = {
+--    line = line,
+--    l = l,
+--    idx_line = idx_line,
+--    l_counter = l_counter,
+--    count_line_dialogue = count_line_dialogue,
+--    ini_line = ini_line,
+--    linefx = linefx
+--};
 
 
