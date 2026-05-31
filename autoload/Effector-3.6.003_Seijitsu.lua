@@ -32,7 +32,7 @@
 	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 September 19th 2025 Argentina ]]--
 	--===========================================================================================================================--
 	include( "karaskel.lua" )
-	include( "Effector-utils-lib-3.6.002_Seijitsu.lua" )
+	include( "Effector-utils-lib-3.6.003_Seijitsu.lua" )
 	
 	--> Modificaciones hasta el momento:
 	-- CARGA DE LA NUEVA LIBRERÍA newkara_library
