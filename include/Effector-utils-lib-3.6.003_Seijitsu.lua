@@ -4,8 +4,8 @@
 	-- Effector-utils-lib ------------------------------------------------------------------------------------
 	Effector_Lib_authors  = "Itachi Akatsuki, Vict8r & Trota"
 	Effector_Lib_testers  = "Trota"
-	Effector_Lib_version  = "3.6.002"
-	Effector_Lib_modified = "December 04th 2025"
+	Effector_Lib_version  = "3.6.003"
+	Effector_Lib_modified = "May 30th 2026"
 	-- functions abbreviations -------------------------------------------------------------------------------
 	sin = math.sin							asin = math.asin						pi = math.pi
 	cos = math.cos							acos = math.acos						ln = math.log
@@ -16533,6 +16533,59 @@
 		return line_without_syl_nil
 	end
 	
+	-- Modificación necesaria por destrucción de tiempos cuando se daban casos tales como "{\\k10} na" o "{\\k10}na ni".
+	function text.to_word( line_text_str, line_text_dur )
+		local txt_str = line_text_str:gsub( "\\N", " " )
+		txt_str = text.remove_space_in_tags( txt_str )
+		local line_text_dur = line_text_dur or fx.dur
+		local words_in_line = { }
+
+		-- Detección Inteligente
+		local is_karaoke = txt_str:match("\\[kK][fo]*%d+")
+
+		if is_karaoke then
+			-- Si es Karaoke, atrapa el tag y todo el texto/espacio que le siga hasta el próximo tag.
+			-- Esto evita que "{\k0}na ni", por ejemplo, se separe y rompa el tiempo.
+			local pre_text = txt_str:match("^([^{]+)")
+			if pre_text and pre_text:gsub("%s","") ~= "" then
+				table.insert(words_in_line, pre_text)
+			end
+			
+			for wrd in txt_str:gmatch("%b{}[^{]*") do
+				table.insert(words_in_line, wrd)
+			end
+		else
+			-- Fallback. Si es texto plano (sin karaoke) separa por espacios normalmente.
+			for wrd in txt_str:gmatch("%S+%s*") do
+				table.insert(words_in_line, wrd)
+			end
+		end
+
+		-- Bloque de seguridad interno del KE (para evitar crash por sílabas vacías)
+		if words_in_line[ 1 ] then
+			local word_in_t_1 = text.remove_tags( words_in_line[ 1 ] ):gsub( " ", "" ):gsub( "	", "" )
+			if unicode.len( word_in_t_1 ) == 0 then
+				words_in_line[ 1 ] = words_in_line[ 1 ]:gsub( " ", "" ):gsub( "	", "" ) .. "KEfx"
+			end
+			if words_in_line[ 1 ] == "KEfx" then
+				table.remove( words_in_line, 1 )
+			end
+		end
+
+		-- Borra los espacios finales.
+		if #words_in_line > 0 then
+			words_in_line[ #words_in_line ] = string.gsub(words_in_line[ #words_in_line ], "[ \t]+$", "")
+		end
+
+		-- Fallback final de seguridad
+		if #words_in_line == 0 then
+			words_in_line[ 1 ] = string.format( "{\\k%d}", line_text_dur / 10 )
+		end
+
+		return words_in_line
+	end
+	
+	--[[ VIEJA VERSIÓN DEL 3.6 Legacy
 	function text.to_word( line_text_str, line_text_dur )
 		local txt_str = line_text_str:gsub( "\\N", " " )
 		txt_str = text.remove_space_in_tags( txt_str )
@@ -16541,7 +16594,7 @@
 		--for wrd in txt_str:gmatch( "[{.-}]*[%S+]*[\32-\47\58-\64]*" ) do
 		for wrd in txt_str:gmatch( "[{.-}]*[%S+]*[\33-\47\58-\64]*[%s]*" ) do --fix: may 11th 2018
 			table.insert( words_in_line, wrd )
-		end
+		end		
 		table.remove( words_in_line, #words_in_line )
 		if words_in_line[ 1 ] then
 			local word_in_t_1 = text.remove_tags( words_in_line[ 1 ] ):gsub( " ", "" ):gsub( "	", "" )
@@ -16560,7 +16613,8 @@
 		end
 		return words_in_line
 	end
-
+	]]
+	
 	function text.text2word( line_text_str, line_text_dur )
 		local line_text_dur = line_text_dur or fx.dur
 		local words_in_text = text.to_word( line_text_str, line_text_dur )
@@ -20182,7 +20236,7 @@ function text.gradienth( ... )
 		for i = 1, #linefx do
 			mmwth[ i ] = { wo = { }, sm = { }, sy = { }, ro = { }, hi = { }, ka = { }, ch = { }, pa = { } }
 			mmdur[ i ] = { wo = { }, sm = { }, sy = { }, ro = { }, hi = { }, ka = { }, ch = { }, pa = { } }
-			linefx[ i ].text = linefx[ i ].text:gsub( "(%b{})([	 ]^*)([\32-\47\58-\64]*%S+[\32-\47\58-\64]*)", " %1%3%2" ) --fix "Hira nil"
+			-- linefx[ i ].text = linefx[ i ].text:gsub( "(%b{})([	 ]^*)([\32-\47\58-\64]*%S+[\32-\47\58-\64]*)", " %1%3%2" ) --fix "Hira nil"
 			linefx[ i ].text = linefx[ i ].text:gsub( "(}#)( [ ]*{)", "%1{\\k0}%2" )
 			linefx[ i ].text = linefx[ i ].text:gsub( "(}＃)( [ ]*{)", "%1{\\k0}%2" )
 			l_style = styles[ tostring( linefx[ i ].style ) ] or styles[ 1 ] --> DefaultKE style
@@ -22056,9 +22110,10 @@ end
     return ""
 end
 
---===========================================================================================--
---      FUNCIÓN MEJORADA: text.bord_to_pixels_3 Repara el error de caché de la v1
---===========================================================================================--
+--=====================================================================================================--
+--FUNCIÓN MEJORADA: text.bord_to_pixels_3 Repara el error de caché de la v1 usando el viejo motor Yutils
+--=====================================================================================================--
+
 function text.bord_to_pixels_3(Text, Shape, Pixel, Seed, Bord, Filter, Scale)
     local text_2bord = Text or val_text
     local bord_shape
@@ -22127,6 +22182,103 @@ function text.bord_to_pixels_3(Text, Shape, Pixel, Seed, Bord, Filter, Scale)
     return ""
 end
 
+--=====================================================================================================--
+--FUNCIÓN MEJORADA: text.bord_to_pixels_4 Repara el error de caché de la v1 usando el nuevo motor de ke.
+--=====================================================================================================--
+
+function text.bord_to_pixels_4(Text, Shape, Pixel, Seed, Bord, Filter, Scale)
+    local text_2bord = Text or val_text
+    local bord_shape
+    local size_pixel = (type(Pixel) == "number" and Pixel > 0) and Pixel or 1
+    local seed_space = Seed or 1
+    local text_scale = Scale or 1
+
+    local shape_template
+    local points
+
+    local is_shape = false
+    local clean_txt = text_2bord:gsub("%b{}", ""):gsub("^%s+", "")
+    
+    if clean_txt:match("^m%s+%-?%d") then
+        is_shape = true
+    end
+
+    if is_shape then
+        if text_scale ~= 1 then
+            shape_template = shape.ratio(text_2bord, text_scale)
+        else
+            shape_template = text_2bord
+        end
+    else
+
+        local fn = l.fontname or "Arial"
+        local fs = l.fontsize or 20
+        local b  = tostring(l.bold or false)
+        local i  = tostring(l.italic or false)
+        local sp = l.spacing or 0
+        local scx = l.scale_x or 100
+        
+
+        local cache_key_template = string.format("shp_tpl_v4_%s_sc%.2f_fn%s_fs%.1f_b%s_i%s_sp%.1f_sx%.1f", 
+            text_2bord, text_scale, fn, fs, b, i, sp, scx)
+        
+        shape_template = recall[cache_key_template]
+        
+        if not shape_template then
+            local success, raw_shape_code = pcall(function()
+
+                if ke and ke.infofx then
+                    ke.infofx.l = { style = L, text_raw = l.text }
+                    ke.infofx.fx = fx
+                end
+                
+                return ke.text.to_shape(text_2bord, text_scale, true)
+            end)
+            
+            if not success or not raw_shape_code or raw_shape_code:gsub("%s", "") == "" then
+                shape_template = remember(cache_key_template, "m 0 0")
+            else
+                shape_template = remember(cache_key_template, raw_shape_code)
+            end
+        end
+    end
+
+    local text_shape_displaced = shape.displace(shape_template, fx.pos_l, fx.pos_t)
+
+    points = shape.point(text_shape_displaced, size_pixel)
+    
+    maxloop(#points)
+
+    if #points > 0 and points[j] then
+        if Shape then
+            if type(Shape) == "function" then bord_shape = Shape()
+            elseif type(Shape) == "table" then bord_shape = Shape[math.i(j, #Shape)["1-->A"]]
+            else bord_shape = Shape end
+        else
+            bord_shape = shape.pixel
+        end
+        
+        local final_x, final_y = points[j].x, points[j].y
+        local bordpixel_pos
+
+        if Filter then
+             bordpixel_pos = Filter({points[j]}) or effector.new_pos(final_x, final_y)
+        else
+             bordpixel_pos = effector.new_pos(final_x, final_y)
+        end
+
+        fx.pos_x, fx.pos_y = final_x, final_y
+        
+        if R(seed_space) == 1 then
+            if posgroup and posgroup() then
+                return string.format("{%s%s}%s", bordpixel_pos, extra_tags or "", bord_shape)
+            end
+            return string.format("{%s%s}%s", bordpixel_pos, extra_tags or "", bord_shape)
+        end
+    end
+    
+    return ""
+end
 
 --===========================================================================================--
 --                               Nuevas funciones (Seijitsu Fork)
@@ -22432,4 +22584,378 @@ function text.to_pixels_2(Text, Shape, Space, Filter, Mode)
     return string.format("{\\1a%s\\p1}%s", pixel.a, Shape)
 end
 
---------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- Inicialización del caché global
+	_G.Effector_Shape_Cache = _G.Effector_Shape_Cache or {}
+
+	function text.clean_cache()
+		_G.Effector_Shape_Cache = {}
+		if collectgarbage then collectgarbage() end
+	end
+
+	--------------------------------------------------------------------------------
+	-- TEXT.TO_SHAPE_2:
+	--------------------------------------------------------------------------------
+	function text.to_shape_2( Text, Scale, Tags, Offset )
+		local Text = Text or val_text
+		while Text:sub( -1, -1 ) == " " do Text = Text:sub( 1, -2 ) end
+		
+		local text_scale = Scale or 1
+		local shape_scale = math.round( math.log( text_scale, 2 ) + 1 )
+		
+		local base_fn = l.fontname or "Arial"
+		local base_fs = l.fontsize or 20
+		local base_b  = l.bold or false
+		local base_i  = l.italic or false
+		local base_u  = l.underline or false
+		local base_s  = l.strikeout or false
+		local base_scx = l.scale_x or 100
+		local base_scy = l.scale_y or 100
+		local base_sp  = l.spacing or 0
+
+		local tagx = Text:match( "%b{}" )
+		
+		local fn = (tagx and tagx:match("\\fn([^\\}]+)")) or base_fn
+		
+		local fs_match = tagx and tagx:match("\\fs(%d+[%.%d]*)")
+		local fs = (fs_match and tonumber(fs_match)) or base_fs
+		if not fs or fs <= 0 then fs = 20 end
+		
+		local b_tag = tagx and tagx:match("\\b([01])")
+		local b = b_tag and (b_tag == "1") or base_b
+		
+		local i_tag = tagx and tagx:match("\\i([01])")
+		local i = i_tag and (i_tag == "1") or base_i
+		
+		local u_tag = tagx and tagx:match("\\u([01])")
+		local u = u_tag and (u_tag == "1") or base_u
+		
+		local s_tag = tagx and tagx:match("\\s([01])")
+		local s = s_tag and (s_tag == "1") or base_s
+
+		local scx_match = tagx and tagx:match("\\fscx(%d+[%.%d]*)")
+		local scx = (scx_match and tonumber(scx_match)) or base_scx
+		
+		local scy_match = tagx and tagx:match("\\fscy(%d+[%.%d]*)")
+		local scy = (scy_match and tonumber(scy_match)) or base_scy
+		
+		local sp_match = tagx and tagx:match("\\fsp(%-?%d+[%.%d]*)")
+		local sp = (sp_match and tonumber(sp_match)) or base_sp
+
+		local cache_key = string.format("TXT:%s|S:%.3f|FN:%s|FS:%.2f|B:%s|I:%s|U:%s|S:%s|X:%.1f|Y:%.1f|SP:%.2f", 
+			Text:gsub("%b{}", ""),
+			text_scale, 
+			fn, fs, 
+			tostring(b), tostring(i), tostring(u), tostring(s), 
+			scx, scy, sp
+		)
+
+		local text_shape = _G.Effector_Shape_Cache[cache_key]
+
+		if not text_shape then
+			local text_confi = {
+				[1] = fn,
+				[2] = b,
+				[3] = i,
+				[4] = u,
+				[5] = s,
+				[6] = fs,
+				[7] = text_scale * scx / 100,
+				[8] = text_scale * scy / 100,
+				[9] = sp
+			}
+			
+			local success, raw_shape = pcall(function() 
+				local text_font = Yutils.decode.create_font( unpack( text_confi ) )
+
+				return shape.ASSDraw3( text_font.text_to_shape( Text ) )
+			end)
+			
+			if success and raw_shape then
+				text_shape = raw_shape
+				_G.Effector_Shape_Cache[cache_key] = text_shape
+			else
+				_G.Effector_Shape_Cache[cache_key] = ""
+				return ""
+			end
+		end
+
+		if text_shape ~= "" then
+			local text_off_x = 0
+			local text_off_y = 0
+			
+			if not Offset then
+				local w_s = shape.width( text_shape )
+				local h_s = shape.height( text_shape )
+				
+				local w_t = text_scale * aegisub.width( text.remove_tags( Text ) )
+				local h_t = text_scale * aegisub.height( text.remove_tags( Text ) )
+				
+				text_off_x = 0.5 * (w_s - w_t)
+				text_off_y = 0.5 * (h_s - h_t)
+			end
+			
+			local final_shape = shape.displace( text_shape, text_off_x, text_off_y )
+			
+			if Tags then
+				return format( "{\\p%d%s}%s", shape_scale, extra_tags or "", final_shape )
+			end
+			return final_shape
+		end
+		
+		return ""
+	end
+	
+	--------------------------------------------------------------------------------
+	-- TEXT.TO_CLIP: Wrapper
+	--------------------------------------------------------------------------------
+	
+	function text.to_clip_2( Text, relative_pos, iclip, Scale )
+		local Text = Text or val_text
+		local text_scale = Scale or 1
+		
+
+		local angle = 0
+		if Text:match( "%b{}" ) then
+			local tagsx = Text:match( "%b{}" )
+			local frz = tagsx:match( "\\fr[z]*(%-?%d[%.%d]*)" )
+			if frz then angle = tonumber(frz) end
+		end
+		
+
+		local clip_shape = text.to_shape_2( Text, text_scale, nil, true )
+		
+		if clip_shape ~= "" then
+			-- Rotar
+			if angle ~= 0 then
+				clip_shape = shape.rotate( clip_shape, angle, "center" )
+			end
+		
+			-- Desplazar
+			local final_clip
+			if relative_pos then
+
+				final_clip = shape.displace( clip_shape, val_left, val_top )
+			else
+
+				final_clip = shape.displace( clip_shape, fx.move_l1, fx.move_t1 )
+			end
+			
+			local text_mode = iclip and "i" or ""
+			return format( "\\%sclip(%s)%s", text_mode, final_clip, extra_tags or "" )
+		end
+		
+		return ""
+	end
+
+-- ============================================================================
+-- SLICE_RECT_CLIPPER
+-- ============================================================================
+
+local function make_rectangle(x0, y0, x1, y1)
+    return string.format(
+        "m %.2f %.2f l %.2f %.2f l %.2f %.2f l %.2f %.2f",
+        x0, y0, x1, y0, x1, y1, x0, y1
+    )
+end
+
+local function make_slice_mask(bbox, i, n, orientation, t, mode, overlap)
+    local minx, miny = bbox.minx, bbox.miny
+    local maxx, maxy = bbox.maxx, bbox.maxy
+    local width, height = bbox.width, bbox.height
+    
+    local epsilon = 0.05 
+
+    if orientation == "v" then
+        local slice_h = height / n
+        local y_start = miny + (i - 1) * slice_h
+        local y_end = y_start + slice_h
+        
+        if mode == "reveal" then
+            local reveal_h = slice_h * math.min(1, math.max(0, t))
+            y_end = y_start + reveal_h
+            if (y_end - y_start) < epsilon then return nil end
+        end
+        
+        return make_rectangle(minx, y_start - overlap, maxx, y_end + overlap)   
+        
+    elseif orientation == "h" then
+        local slice_w = width / n
+        local x_start = minx + (i - 1) * slice_w
+        local x_end = x_start + slice_w
+        
+        if mode == "reveal" then
+            local reveal_w = slice_w * math.min(1, math.max(0, t))
+            x_end = x_start + reveal_w
+            if (x_end - x_start) < epsilon then return nil end
+        end
+        
+        return make_rectangle(x_start - overlap, miny, x_end + overlap, maxy)
+    end
+    return nil
+end
+
+local function clip_intersection(subject_code, mask_code)
+    if not mask_code or mask_code == "" then return "" end
+    local success, result = pcall(function()
+        return ke.shape.clipper.boolean(subject_code, mask_code, "intersection", "evenodd")
+    end)
+    if not success or not result then return "" end
+    local result_code = type(result) == "table" and (result.code or "") or tostring(result)
+    if result_code:find("[lb]") then return result_code end
+    return ""
+end
+
+-- ----------------------------------------------------------------------------
+-- FUNCIÓN PRINCIPAL
+-- ----------------------------------------------------------------------------
+function slice_rect_clipper(shp_code, n, orientation, overlap, t, mode)
+    n = math.max(1, math.floor(n or 1))
+    orientation = orientation or "v"
+    overlap = overlap or 0
+    t = math.min(1, math.max(0, t or 1))
+    mode = mode or "reveal"
+    
+    local subject_shp = ke.shape.new(shp_code)
+
+    local minx, miny = subject_shp.minx, subject_shp.miny
+    local maxx, maxy = subject_shp.maxx, subject_shp.maxy
+    local ghost_marker = string.format("m %.2f %.2f m %.2f %.2f ", maxx, maxy, minx, miny)
+
+    if n <= 1 and t >= 1 then
+        return {ghost_marker .. subject_shp.code}
+    end
+    
+    local bbox = {
+        minx=minx, miny=miny, maxx=maxx, maxy=maxy, 
+        width=subject_shp.width, height=subject_shp.height
+    }
+    
+    local slices = {}
+    
+    for i = 1, n do
+        local mask_code = make_slice_mask(bbox, i, n, orientation, t, mode, overlap)
+        
+        if mask_code then
+            local slice_res = clip_intersection(subject_shp.code, mask_code)
+            if slice_res ~= "" then
+                slices[i] = ghost_marker .. slice_res
+            else
+                slices[i] = ""
+            end
+        else
+            slices[i] = ""
+        end
+    end
+    
+    return slices
+end
+
+-- ============================================================================
+-- WRAPPER LOOP
+-- ============================================================================
+local slice_cache = {}
+
+function slice_rect_clipper_loop(shp_code, n, orientation, overlap, t, j_idx, mode, opts)
+
+    n = math.max(1, n or 1)
+    
+    -- Orientación
+    orientation = orientation or "v"
+    
+    overlap = overlap or 0
+    
+    t = math.min(1, math.max(0, t or 1))
+    
+    local current_j = j_idx or j 
+    
+    mode = mode or "reveal"
+    
+    opts = opts or {}
+
+    -- Validación de índice
+    if not current_j or current_j < 1 or current_j > n then return "" end
+    
+    local cache_key = string.format("%s|%d|%s|%.2f|%.4f|%s", 
+        shp_code, n, orientation, overlap, t, mode
+    )
+    
+    local slices
+    if opts.cache ~= false and slice_cache[cache_key] then
+        slices = slice_cache[cache_key]
+    else
+        slices = slice_rect_clipper(shp_code, n, orientation, overlap, t, mode)
+        if opts.cache ~= false then slice_cache[cache_key] = slices end
+    end
+    
+    if slices and slices[current_j] and slices[current_j] ~= "" then
+        return string.format("{\\p1}%s", slices[current_j])
+    end
+    
+    return ""
+end
+
+--=============================================================================--
+-- COLOR.SET_2
+--=============================================================================--
+function color.set_2(Times, Colors, Tag, d_manual)
+    local Tag = Tag or "\\1c"
+    local output = ""
+
+    local inicio_real = l_start - (d_manual or 0)
+    
+    if type(Colors) ~= "table" then Colors = {Colors} end
+    
+    for i = 1, #Times do
+        local entry = Times[i]
+        local t_glob, t_dur, t_acc = 0, 0, 1
+        
+        if type(entry) == "table" then
+            t_glob, t_dur, t_acc = entry[1], entry[2] or 0, entry[3] or 1
+        else
+            t_glob = entry
+        end
+
+        if type(t_glob) == "string" then t_glob = HMS_to_ms(t_glob) end
+
+        local t1 = t_glob - inicio_real
+        local t2 = t1 + t_dur
+        
+        output = output .. string.format("\\t(%.1f,%.1f,%s,%s%s)", t1, t2, t_acc, Tag, Colors[(i-1)%#Colors+1])
+    end
+    return output
+end
+
+-- ============================================================================
+-- FUNCIÓN: shape.custom_clip 
+-- Permite usar cualquier shape como máscara de corte (diferencia, intersección, etc)
+-- ============================================================================
+function shape.custom_clip(subject_shp, mask_shp, operation)
+    local op = operation or "difference"
+    
+    -- Validar inputs
+    local subject_code = type(subject_shp) == "table" and subject_shp.code or subject_shp
+    local mask_code = type(mask_shp) == "table" and mask_shp.code or mask_shp
+    
+    if type(subject_code) ~= "string" or subject_code:gsub("%s", "") == "" then return "" end
+    if type(mask_code) ~= "string" or mask_code:gsub("%s", "") == "" then 
+        return op == "difference" and subject_code or "" 
+    end
+    
+    local success, result = pcall(function()
+        return ke.shape.clipper.boolean(subject_code, mask_code, op, "evenodd")
+    end)
+    
+    if not success then
+        aegisub.debug.out(string.format("shape.custom_clip Error (%s): %s\n", op, tostring(result)))
+        return subject_code
+    end
+    
+    local result_code = type(result) == "table" and result.code or result
+    
+    if type(result_code) ~= "string" or result_code:gsub("%s", "") == "" then
+        return "" 
+    end
+    
+    return result_code
+end

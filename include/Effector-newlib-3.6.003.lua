@@ -23,10 +23,10 @@
 	--> http://www.karaeffector.blogspot.com
 	
 	-- Effector-newlib-3.6.lua -------------------------------------------------------------------------------------
-	Effector_NewLib_authors  = "Itachi Akatsuki"
-	Effector_NewLib_testers  = "NatsuoKE & Vict8r"
-	Effector_NewLib_version  = "1.0"
-	Effector_NewLib_modified = "January 12th 2019"
+	Effector_NewLib_authors  = "Itachi Akatsuki & Trota"
+	Effector_NewLib_testers  = "NatsuoKE & Vict8r & Trota"
+	Effector_NewLib_version  = "3.6.003"
+	Effector_NewLib_modified = "May 30th 2026"
 	----------------------------------------------------------------------------------------------------------------
   
 	--[[ tag.create_clip_grid
@@ -158,10 +158,51 @@ function calculate.avg_char_width(char_widths_table, text_string)
 end
 
 function calculate.synchronized_extratime(line_context, progression_const, fade_dur, avg_char_width, max_added_time)
-    progression_const = progression_const or 0
-    fade_dur = fade_dur or 0
-    avg_char_width = avg_char_width or 15
-    max_added_time = max_added_time or 2000
+    local progression_const = progression_const or 0
+    local fade_dur = fade_dur or 0
+    local avg_char_width = avg_char_width or 15
+    local max_added_time = max_added_time or 2000
+
+    local line = line_context.line
+    local l = line_context.l
+    local linefx = line_context.linefx
+    local idx_line = line_context.idx_line
+    local count_line_dialogue = line_context.count_line_dialogue
+    local ini_line = line_context.ini_line
+
+    local current_char_count = unicode.len((line.text_stripped:gsub(" ", "")))
+    local P2_current = progression_const * (current_char_count > 1 and current_char_count - 1 or 0)
+    
+    if line.i >= line.n then
+        return P2_current + 250
+    end
+
+    local next_line_index_in_selection = line.i + 1
+    local next_line_index_in_file = idx_line[next_line_index_in_selection]
+    local next_line_index_in_linefx = next_line_index_in_file + count_line_dialogue - ini_line
+    local next_line = linefx[next_line_index_in_linefx]
+    if not next_line then return P2_current end
+    
+    local next_line_char_count = unicode.len((next_line.text_stripped:gsub(" ", "")))
+    local P2_next = progression_const * (next_line_char_count > 1 and next_line_char_count - 1 or 0)
+    local transition_duration = (P2_current + P2_next) / 2
+    local spatial_jump = next_line.left - line.right
+    local spatial_compensation_time = (spatial_jump > 0) and ((spatial_jump / avg_char_width) * progression_const) or 0   
+    local ideal_end_time = next_line.start_time + transition_duration + spatial_compensation_time - fade_dur   
+    local extra_time_needed = ideal_end_time - l.end_time   
+    local final_extra_time = math.min(max_added_time, math.max(0, extra_time_needed))   
+    return final_extra_time
+end
+
+function calculate.synchronized_extratime_2(line_context, progression_const, fade_dur, avg_char_width, max_added_time, delay, max_gap_threshold, extra)
+    local progression_const = progression_const or 0
+    local fade_dur = fade_dur or 0
+    local avg_char_width = avg_char_width or 15
+    local max_added_time = max_added_time or 2000
+    local max_gap_threshold = max_gap_threshold or 3000
+    local delay = delay or 250
+    local extra = extra or 250
+
     local line = line_context.line
     local l = line_context.l
     local linefx = line_context.linefx
@@ -169,7 +210,7 @@ function calculate.synchronized_extratime(line_context, progression_const, fade_
     local count_line_dialogue = line_context.count_line_dialogue
     local ini_line = line_context.ini_line
     local current_char_count = unicode.len((line.text_stripped:gsub(" ", "")))
-    local P2_current = progression_const * (current_char_count > 1 and current_char_count - 1 or 0)
+    local P2_current = progression_const * (current_char_count > 1 and current_char_count - 1 or 0) + extra
     
     if line.i >= line.n then
         return P2_current
@@ -180,6 +221,17 @@ function calculate.synchronized_extratime(line_context, progression_const, fade_
     local next_line_index_in_linefx = next_line_index_in_file + count_line_dialogue - ini_line
     local next_line = linefx[next_line_index_in_linefx]
     if not next_line then return P2_current end
+    
+    local gap_between_lines = next_line.start_time - l.end_time
+    
+    if gap_between_lines < delay then
+        return 0
+    end
+    
+    if gap_between_lines > max_gap_threshold then
+        return P2_current
+    end
+    
     local next_line_char_count = unicode.len((next_line.text_stripped:gsub(" ", "")))
     local P2_next = progression_const * (next_line_char_count > 1 and next_line_char_count - 1 or 0)
     local transition_duration = (P2_current + P2_next) / 2
@@ -191,7 +243,6 @@ function calculate.synchronized_extratime(line_context, progression_const, fade_
     
     return final_extra_time
 end
-
 -- Ejemplo de uso:
 -- Casilla end_time:
 -- l.end_time + delay2 + calculate.extratime(line_context, progression_const, fade_dur)
@@ -199,14 +250,157 @@ end
 -- progression_const = 35;
 -- fade_dur = 150;
 -- delay2 = 250;
--- line_context = {
---    line = line,
---    l = l,
---    idx_line = idx_line,
---    l_counter = l_counter,
---    count_line_dialogue = count_line_dialogue,
---    ini_line = ini_line,
---    linefx = linefx
---};
 
+-- =====================================================================
+-- MÓDULO SHAPERY PARA KARA EFFECTOR 3.6.003
+-- =====================================================================
 
+local status, ILL = pcall(require, "ILL.ILL")
+local SHP = status and ILL.Path or nil
+
+if not SHP then
+    aegisub.debug.out(0, "[Error] ILL.ILL Shapery no encontrado. Los efectos vectoriales no funcionarán.\n")
+end
+
+-- ---------------------------------------------------------------------
+-- CAPA PRIVADA
+-- ---------------------------------------------------------------------
+
+local function _clean(shape)
+    if type(shape) ~= "string" or shape == "" then return "" end
+    local cleaned = shape:gsub("nan", "0"):gsub("inf", "0")
+    return cleaned:gsub("(%-?%d+%.%d%d)%d+", "%1")
+end
+
+local function _run_shp(shape_str, action_fn, context_name)
+    if type(shape_str) ~= "string" then 
+        aegisub.debug.out(1, string.format("[Aviso %s] Se esperaba un vector, pero se recibió: %s\n", context_name, type(shape_str)))
+        return ""
+    end
+    
+    if shape_str == "" or shape_str:match("nan") or shape_str:match("inf") then 
+        return shape_str 
+    end
+
+    local ok, result_or_err = pcall(function()
+        local p = SHP(shape_str)
+        action_fn(p)
+        return _clean(p:export())
+    end)
+    
+    if not ok then
+        aegisub.debug.out(0, string.format("[Error en %s] %s\n", context_name, tostring(result_or_err)))
+        return shape_str
+    end
+
+    return result_or_err
+end
+
+-- ---------------------------------------------------------------------
+-- CAPA PÚBLICA
+-- ---------------------------------------------------------------------
+
+function FX_ShpOffset(str, dist)
+    local d = tonumber(dist) or 0.0 
+    return _run_shp(str, function(p) 
+        p:offset(d, "round", "polygon")
+        p:simplify(0.5) 
+    end, "FX_ShpOffset")
+end
+
+function FX_ShpRound(str, rad)
+    if not SHP or type(str) ~= "string" or str == "" then return str end
+    if str:match("nan") or str:match("inf") then return str end
+
+    local ok, result_or_err = pcall(function()
+        local p = SHP.RoundingPath(str, rad, false, "Rounded", "Absolute")
+        return _clean(p:export())
+    end)
+    
+    if not ok then
+        aegisub.debug.out(0, string.format("[Error en FX_ShpRound] %s\n", tostring(result_or_err)))
+        return str
+    end
+    return result_or_err
+end
+
+function FX_ShpSimplify(str, tol)
+    return _run_shp(str, function(p) p:simplify(tol or 1) end, "FX_ShpSimplify")
+end
+
+function FX_ShpTransform(str, sx, sy, rot, tx, ty)
+    return _run_shp(str, function(p) 
+        if sx or sy then p:scale(sx or 1, sy or 1) end
+        if rot and rot ~= 0 then p:rotate(rot) end
+        if tx or ty then p:move(tx or 0, ty or 0) end
+    end, "FX_ShpTransform")
+end
+
+function FX_ShpBoolean(str_A, str_B, op)
+    if not SHP or type(str_A) ~= "string" or type(str_B) ~= "string" then return str_A end
+    if str_A == "" or str_B == "" then return str_A end
+
+    local ok, result_or_err = pcall(function()
+        local pA = SHP(str_A)
+        local pB = SHP(str_B)
+        
+        if op == "union" or op == "unite" then 
+            pA:unite(pB)
+        elseif op == "difference" then 
+            pA:difference(pB)
+        elseif op == "xor" or op == "exclude" then 
+            pA:exclude(pB)
+        else 
+            pA:intersect(pB)
+        end
+        
+        pA:simplify(0.5)
+        return _clean(pA:export())
+    end)
+    
+    if not ok then
+        aegisub.debug.out(0, string.format("[Error en FX_ShpBoolean] Op: %s - %s\n", tostring(op), tostring(result_or_err)))
+        return str_A
+    end
+    
+    return result_or_err
+end
+
+function FX_ShpToCenter(str)
+    return _run_shp(str, function(p) p:toCenter() end, "FX_ShpToCenter")
+end
+
+function FX_ShpToOrigin(str)
+    return _run_shp(str, function(p) p:toOrigin() end, "FX_ShpToOrigin")
+end
+
+-- ---------------------------------------------------------------------
+-- CAPA DE EXTRACCIÓN
+-- ---------------------------------------------------------------------
+
+function FX_ShpBox(str)
+    local empty_box = {x=0, y=0, w=0, h=0, cx=0, cy=0}
+    if not SHP or type(str) ~= "string" or str == "" then return empty_box end
+    
+    local ok, box_or_err = pcall(function()
+        local p = SHP(str)
+        local box = p:boundingBox()
+        
+        -- Tabla real de ILL: l (left), t (top), r (right), b (bottom), width, height
+        return {
+            x = box.l,                  -- Borde Izquierdo
+            y = box.t,                  -- Borde Superior
+            w = box.width,              -- Anchura
+            h = box.height,             -- Altura
+            cx = box.l + (box.width / 2),  -- Centro Matemático X
+            cy = box.t + (box.height / 2)  -- Centro Matemático Y
+        }
+    end)
+    
+    if not ok then
+        aegisub.debug.out(0, string.format("[Error en FX_ShpBox] %s\n", tostring(box_or_err)))
+        return empty_box
+    end
+    
+    return box_or_err
+end
