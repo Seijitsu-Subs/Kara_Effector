@@ -29,7 +29,7 @@
 	que están haciendo,  ya que lo que más factible es que deje de funcionar de manera correcta o que simplemente no lo haga. Y sin
 	más, nos despedimos, esperando que este trabajo sea del agrado de todos ustedes. ^^'... ]]--
 	--===========================================================================================================================--
-	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 September 19th 2025 Argentina ]]--
+	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 May 30th 2026 Argentina ]]--
 	--===========================================================================================================================--
 	include( "karaskel.lua" )
 	include( "Effector-utils-lib-3.6.003_Seijitsu.lua" )
@@ -41,7 +41,7 @@
 	script_name		   = "Kara Effector Seijitsu Fork"
 	script_description = "Effects Automation Karaokes. Creating Effects with Modifiable Parameters"
 	script_author	   = "KaraLaura" -- A quien le damos muchas gracias.
-	script_version	   = "3.6.002"
+	script_version	   = "3.6.003"
 	--===========================================================================================================================--
 	Path_Effector_newfx_lua = nil
 	--Path_Effector_newfx_lua = "C:\\Users\\HP4\\Desktop\\Kara Effector 3.6\\Effector-newfx-3.6.lua"
@@ -703,7 +703,7 @@
 		end
 		
 		------------------------------------
-		include( "Effector-newlib-3.6.lua" )
+		include( "Effector-newlib-3.6.003.lua" )
 		-- september 01st 2018 -------------
 		
 		if (fx__.t_type == "Line"
@@ -7654,7 +7654,7 @@
 	function_text_to_shape = effector.create_fx( "FTfx", "function_text_to_shape", "Line", true, false, "#FFFFFF", "#343434", "#000000", "0", "0", "0", "l.start_time", "l.end_time", "", "", "", "", "line.center", "line.middle", "", "", "5", "0", "fx.pos_x", "fx.pos_y", "", "1", "", "text.to_shape( )", "", "", "Lua", false )
 
 	--===============================--
-	include( "Effector-newfx-3.6.lua" )
+	include( "Effector-newfx-3.6.003.lua" )
 	--===============================--
 
 	for i = 1, #leadin_fx do
