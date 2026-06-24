@@ -34,7 +34,7 @@
 	que están haciendo,  ya que lo que más factible es que deje de funcionar de manera correcta o que simplemente no lo haga. Y sin
 	más, nos despedimos, esperando que este trabajo sea del agrado de todos ustedes. ^^'... ]]--
 	--===========================================================================================================================--
-	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 July 24th 2026 Argentina ]]--
+	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 June 24th 2026 Argentina ]]--
 	--===========================================================================================================================--
 	include( "karaskel.lua" )
 	include( "Effector-utils-lib-3.6.004_Seijitsu.lua" )

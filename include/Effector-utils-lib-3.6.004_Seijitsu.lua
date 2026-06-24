@@ -5,7 +5,7 @@
 	Effector_Lib_authors  = "Itachi Akatsuki, Vict8r & Trota"
 	Effector_Lib_testers  = "Trota"
 	Effector_Lib_version  = "3.6.004"
-	Effector_Lib_modified = "May 30th 2026"
+	Effector_Lib_modified = "June 24th 2026"
 	-- functions abbreviations -------------------------------------------------------------------------------
 	sin = math.sin							asin = math.asin						pi = math.pi
 	cos = math.cos							acos = math.acos						ln = math.log
@@ -13,7 +13,7 @@
 	abs = math.abs							sinh = math.sinh						atan2 = math.atan2
 	deg = math.deg							cosh = math.cosh					  	format = string.format
 	rad = math.rad							tanh = math.tanh						script_version = "3.6.004"
-	log = math.log10						ceil = math.ceil						script_update = " Seijitsu Fork"
+	log = math.log10						ceil = math.ceil						script_update = " Seijitsu"
 	
 	-- include Yutils by Christoph Spanknebel "Youka" --------------------------------------------------------
 	Yutils = include( "Yutils.lua" ) 									 -- https://github.com/Youka/Yutils --
