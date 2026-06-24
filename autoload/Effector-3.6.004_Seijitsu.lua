@@ -11,6 +11,11 @@
 	--> https://www.youtube.com/user/NatsuoKE
 	--> https://www.youtube.com/user/karalaura2012
 	--> [Discord]  Kara Effector: discord.gg/YFP2zeY
+
+	-- Del fork:
+	--> x.com/SeijitsuSubs
+	--> discord.gg/JQc2gKxYwQ
+	--> wiki.fansubhub.com/es/home
 	
 	-------------------------------------------------------------------------------------------------------------------------------
 	--[[ El proyecto Kara Effector es una serie de archivos .lua que juntos tienen la capacidad de implementar efectos prediseñados
@@ -29,10 +34,10 @@
 	que están haciendo,  ya que lo que más factible es que deje de funcionar de manera correcta o que simplemente no lo haga. Y sin
 	más, nos despedimos, esperando que este trabajo sea del agrado de todos ustedes. ^^'... ]]--
 	--===========================================================================================================================--
-	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 May 30th 2026 Argentina ]]--
+	--[[ Fork del proyecto original modificado por Trota para Seijitsu Subs						 July 24th 2026 Argentina ]]--
 	--===========================================================================================================================--
 	include( "karaskel.lua" )
-	include( "Effector-utils-lib-3.6.003_Seijitsu.lua" )
+	include( "Effector-utils-lib-3.6.004_Seijitsu.lua" )
 	
 	--> Modificaciones hasta el momento:
 	-- CARGA DE LA NUEVA LIBRERÍA newkara_library
@@ -41,7 +46,7 @@
 	script_name		   = "Kara Effector Seijitsu Fork"
 	script_description = "Effects Automation Karaokes. Creating Effects with Modifiable Parameters"
 	script_author	   = "KaraLaura" -- A quien le damos muchas gracias.
-	script_version	   = "3.6.003"
+	script_version	   = "3.6.004"
 	--===========================================================================================================================--
 	Path_Effector_newfx_lua = nil
 	--Path_Effector_newfx_lua = "C:\\Users\\HP4\\Desktop\\Kara Effector 3.6\\Effector-newfx-3.6.lua"
@@ -703,7 +708,7 @@
 		end
 		
 		------------------------------------
-		include( "Effector-newlib-3.6.003.lua" )
+		include( "Effector-newlib-3.6.004.lua" )
 		-- september 01st 2018 -------------
 		
 		if (fx__.t_type == "Line"
@@ -1349,6 +1354,10 @@
 									wordchar.mid_time = char.mid_time - word.start_time
 									wordchar.end_time = char.end_time - word.start_time
 									-----------------------------------------------
+									ci = 0
+									if char.text ~= noblank1 and char.text ~= noblank2 then
+										ci = 1
+									end
 									fx.replay_fx, J = 1, 1
 									maxJ = fx.replay_fx
 									fxgroup = true
@@ -1446,7 +1455,6 @@
 										ke.infofx.ii = ii
 									end
 									-- [FIN DEL PUENTE]
-											ci = 0
 											var.loop = variable_( fx__, meta, line, x, y, line_context )
 											--variables de modulo--
 											module = (j - 1) / (maxj - 1)
@@ -1700,7 +1708,6 @@
 															line.text = fx.tm( format( "{%s}%s", fx.add_tags, returnfx[ 1 ] ) )
 														end
 													end
-													ci = 1
 												end
 											end
 											j = j + 1
@@ -3020,7 +3027,7 @@
 										ke.infofx.ii = ii
 									end
 									-- [FIN DEL PUENTE]
-										var.loop = variable_( fx__, meta, syl, line, x, y )
+										var.loop = variable_( fx__, meta, line, x, y, line_context )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
 										if fx.maxloop_fx == 1 then
@@ -3317,6 +3324,10 @@
 								wordchar.mid_time = char.mid_time - word.start_time
 								wordchar.end_time = char.end_time - word.start_time
 								---------------------------------------------------
+								ci = 0
+								if char.text ~= noblank1 and char.text ~= noblank2 then
+									ci = 1
+								end
 								fx.replay_fx, J = 1, 1
 								maxJ = fx.replay_fx
 								fxgroup = true
@@ -3407,8 +3418,7 @@
 										ke.infofx.ii = ii
 									end
 									-- [FIN DEL PUENTE]
-										ci = 0
-										var.loop = variable_( fx__, meta, syl, line, x, y )
+										var.loop = variable_( fx__, meta, line, x, y, line_context )
 										--variables de modulo--
 										module = (j - 1) / (maxj - 1)
 										if fx.maxloop_fx == 1 then
@@ -3654,7 +3664,6 @@
 														line.text = fx.tm( format( "{%s}%s", fx.add_tags, returnfx[ 1 ] ) )
 													end
 												end
-												ci = 1
 											end
 										end
 										j = j + 1
@@ -7654,7 +7663,7 @@
 	function_text_to_shape = effector.create_fx( "FTfx", "function_text_to_shape", "Line", true, false, "#FFFFFF", "#343434", "#000000", "0", "0", "0", "l.start_time", "l.end_time", "", "", "", "", "line.center", "line.middle", "", "", "5", "0", "fx.pos_x", "fx.pos_y", "", "1", "", "text.to_shape( )", "", "", "Lua", false )
 
 	--===============================--
-	include( "Effector-newfx-3.6.003.lua" )
+	include( "Effector-newfx-3.6.004.lua" )
 	--===============================--
 
 	for i = 1, #leadin_fx do
