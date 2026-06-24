@@ -110,7 +110,7 @@ La arquitectura del fork se sostiene sobre dos motores simbiontes:
 2.  **Suite ILL Directa (Prefijos `FX_`):** Motor de "Nivel Inferior". Manipulación geométrica masiva en RAM, ideal para recalcular miles de polígonos por segundo.
 
 #### La Familia Slice (`shape.slice`, `shape.slice_grid`)
-Son cortadores lineales. `slice` realiza cortes paralelos con rotación trigonométrica inversa y aceleración (`Accel`). `slice_grid` proyecta matrices NxM. Ambas admiten un Modo "clip" que devuelve las coordenadas de las cuchillas invisibles, evitando *aliasing* nativo en ASS.
+Son cortadores lineales. `slice` realiza cortes paralelos con rotación trigonométrica inversa y aceleración (`Accel`). `slice_grid` proyecta matrices NxM. Ambas admiten un Modo "clip" que devuelve las coordenadas de las cuchillas invisibles.
 
 #### El Orquestador: `shape.slice_mesh`
 ```lua
@@ -127,13 +127,13 @@ Administrador central del sistema. Su ciclo de vida es:
 *(El argumento `Size` es polimórfico y muta a una matriz `cfg` según el motor seleccionado).*
 
 *   **Grupo 1: Geometría Monolítica (1 Parámetro: Radio):**
-    *   `hex` / `honeycomb`, `tri` / `triangle`, `dia` / `diamond`, `rhombille` (Cubos Q*bert), `octagon` (Mosaico Arquimediano), `kagome` (Estrella de David), `truchet` (Tuberías curvas).
+    *   `hex`, `tri`, `dia`, `rhombille` (Cubos Q*bert), `octagon` (Mosaico Arquimediano), `kagome` (Estrella de David), `truchet` (Tuberías curvas).
 *   **Grupo 2: Arquitectónicos (Tabla de múltiples parámetros):**
     *   `brick` (Ladrillos), `ashlar` (Piedra rústica horizontal 1D), `herringbone` (Punto de espiga/Zig-Zag), `scallop` (Escamas rotables).
 *   **Grupo 3: Radiales (Coordenadas polares):**
-    *   `ray` / `radial`, `ring` / `circle`, `web` (Telaraña / Vidrio Roto con nivel de caos y epicentro personalizable).
+    *   `ray`, `ring`, `web` (Telaraña / Vidrio Roto con nivel de caos y epicentro personalizable).
 *   **Grupo 4: División Irregular (Glitch procedural):**
-    *   `mondrian` (Rectángulos asimétricos), `quadtree` / `quad` (Subdivisión cuadrada estricta).
+    *   `mondrian` (Rectángulos asimétricos), `quad` (Subdivisión cuadrada estricta).
 *   **Grupo 5: Motores Ultra-Avanzados:**
     *   `circuit` (Placa Base). Aplica lógica booleana negativa: devuelve los agujeros transparentes del circuito grabado, incluyendo pads de soldadura procedurales.
     *   `pattern`. Orquestador de clonación. Permite instanciar figuras externas (ej. `shape.heart`), intercalarlas en matriz y aplicarlas como malla de corte o como perforación en el texto.
@@ -147,3 +147,35 @@ config = { forma_custom, 30, 25, true, false };
 mesh = shape.slice_mesh( syl.text, "pattern", config, 0, 10 );
 ```
 *Efecto resultante:* La sílaba estalla en bloques cuadrados desfasados (muro), cada uno con un triángulo transparente perforado en su interior, calculado en milisegundos mediante caché determinístico.
+
+### Uso Avanzado del Argumento `Size` (`cfg`) en `shape.slice_mesh`
+
+En la función `shape.slice_mesh`, el tercer parámetro (oficialmente llamado `Size`) es **polimórfico**. Internamente, el orquestador lo transforma en una tabla de configuración (`cfg`). La forma en la que debes escribir este parámetro cambia drásticamente dependiendo del motor (`Mode`) que hayas seleccionado.
+
+A continuación, se detalla cómo estructurar este argumento según la familia del motor:
+
+#### > Motores Monolíticos (Un solo valor)
+Para formas geométricas regulares y radiales simples, el argumento funciona simplemente como el **Radio** o **Tamaño Base** de la celda. Puedes pasar un número directo o una tabla con un solo valor.
+*   **Motores:** `"hex"`, `"tri"`, `"dia"`, `"rhombille"`, `"octagon"`, `"kagome"`, `"truchet"`, `"ray"`, `"ring"`.
+*   **Sintaxis:** `20` o `{20}` *(Ej: Hexágonos de 20px de radio).*
+
+#### > Motores Arquitectónicos y Vectoriales (Múltiples parámetros)
+Estos motores requieren dimensiones específicas (X e Y) o modificadores adicionales, por lo que **debes** pasar una tabla ordenada.
+*   **`"brick"`** ➔ `{ Ancho, Alto, Ratio_Desfase }` (Ej: `{30, 15, 0.5}`)
+*   **`"ashlar"`** ➔ `{ Ancho_Minimo, Ancho_Maximo, Alto_Fila }` (Ej: `{10, 40, 15}`)
+*   **`"herringbone"`** ➔ `{ Longitud_Ladrillo, Grosor_Ladrillo }` (Ej: `{30, 10}`)
+*   **`"scallop"`** ➔ `{ Radio, Angulo_Rotacion }` (Ej: `{15, 180}` *para escamas invertidas*)
+
+#### > Motores Radiales y de Impacto
+*   **`"web"`** ➔ `{ Num_Anillos, Num_Rayos, Nivel_Caos, CentroX (opcional), CentroY (opcional) }` 
+    *(Ej: `{5, 12, 0.3}` genera una telaraña de 5 anillos y 12 puntas con un 30% de distorsión orgánica).*
+
+#### > Motores de Glitch y Subdivisión
+*   **`"mondrian"`** ➔ `{ Tamaño_Minimo, Probabilidad_Corte }` (Ej: `{12, 0.45}`)
+*   **`"quad"`** ➔ `{ Tamaño_Minimo, prob = 0.5 }` 
+    *(⚠️ **Aviso crítico:** En el motor quad, la probabilidad debe declararse con la llave explícita `prob=`).*
+
+#### > Motores Ultra-Avanzados
+*   **`"circuit"`** ➔ `{ Tamaño_Celda, Grosor_Pista, Probabilidad_Soldadura }` (Ej: `{20, 3, 0.2}`)
+*   **`"pattern"`** ➔ `{ Forma_String, Tamaño_Celda, Tamaño_Dibujo, Intercalar_Filas_Bool, Es_Positivo_Bool }` 
+    *(Ej: `{ shape.star, 30, 20, true, false }` perfora el texto con estrellas intercaladas).*

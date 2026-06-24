@@ -110,7 +110,7 @@ The fork's architecture relies on two symbiotic engines:
 2.  **ILL Direct Suite (`FX_` prefixes):** "Low-level" engine. Handles extreme geometric manipulation directly in RAM, processing thousands of polygons per second.
 
 #### The Slice Family (`shape.slice`, `shape.slice_grid`)
-Linear cutters. `slice` executes parallel cuts using inverse sine/cosine trigonometry and acceleration (`Accel`). `slice_grid` projects NxM matrices. Both support a "clip" Mode that outputs invisible blade coordinates to bypass native ASS anti-aliasing artifacts.
+Linear cutters. `slice` executes parallel cuts using inverse sine/cosine trigonometry and acceleration (`Accel`). `slice_grid` projects NxM matrices. Both support a "clip" Mode that outputs invisible blade coordinates.
 
 #### The Orchestrator: `shape.slice_mesh`
 ```lua
@@ -127,13 +127,13 @@ The central manager. Its lifecycle is:
 *(The `Size` argument is polymorphic and mutates into a `cfg` configuration table based on the selected engine).*
 
 *   **Group 1: Monolithic Geometry (1 Parameter: Radius):**
-    *   `hex` / `honeycomb`, `tri` / `triangle`, `dia` / `diamond`, `rhombille` (Q*bert cubes), `octagon` (Archimedean Tessellation), `kagome` (Star of David), `truchet` (Curved pipes).
+    *   `hex`, `tri`, `dia`, `rhombille` (Q*bert cubes), `octagon` (Archimedean Tessellation), `kagome` (Star of David), `truchet` (Curved pipes).
 *   **Group 2: Architectural (Multi-parameter table):**
     *   `brick` (Standard wall), `ashlar` (1D rustic stone), `herringbone` (Zig-zag pattern), `scallop` (Rotatable mermaid scales).
 *   **Group 3: Radial (Polar coordinates):**
-    *   `ray` / `radial`, `ring` / `circle`, `web` (Shattered glass/Spiderweb with customizable chaos and epicenter).
+    *   `ray`, `ring`,`web` (Shattered glass/Spiderweb with customizable chaos and epicenter).
 *   **Group 4: Irregular Division (Procedural Glitch):**
-    *   `mondrian` (Asymmetric rectangles), `quadtree` / `quad` (Strict recursive square subdivision).
+    *   `mondrian` (Asymmetric rectangles), `quad` (Strict recursive square subdivision).
 *   **Group 5: Ultra-Advanced Engines:**
     *   `circuit` (Tech Board). Employs negative boolean logic to return the voids of an etched circuit board, complete with procedural solder pads.
     *   `pattern`. Cloning Orchestrator. Instantiates external shapes (e.g., `shape.heart`), arrays them into a staggered matrix, and applies them as either a positive cutout mesh or negative text perforations.
@@ -147,3 +147,35 @@ config = { custom_shape, 30, 25, true, false };
 mesh = shape.slice_mesh( syl.text, "pattern", config, 0, 10 );
 ```
 *Resulting Effect:* The syllable shatters into staggered square blocks (brick wall), each pierced with a transparent inverted triangle hole, rendered in milliseconds thanks to deterministic hashing.
+
+### Advanced Usage of the `Size` (`cfg`) Argument in `shape.slice_mesh`
+
+In the `shape.slice_mesh` function, the third parameter (officially named `Size`) is **polymorphic**. Internally, the orchestrator transforms it into a configuration table (`cfg`). How you must write this parameter changes drastically depending on the engine (`Mode`) you have selected.
+
+Below is a breakdown of how to structure this argument based on the engine family:
+
+#### > Monolithic Engines (Single value)
+For regular geometric and simple radial shapes, the argument simply acts as the **Radius** or **Base Size** of the cell. You can pass a direct number or a single-value table.
+*   **Engines:** `"hex"`, `"tri"`, `"dia"`, `"rhombille"`, `"octagon"`, `"kagome"`, `"truchet"`, `"ray"`, `"ring"`.
+*   **Syntax:** `20` or `{20}` *(e.g., Hexagons with a 20px radius).*
+
+#### > Architectural and Vector Engines (Multi-parameter)
+These engines require specific dimensions (X and Y) or additional modifiers, so you **must** pass an ordered table.
+*   **`"brick"`** ➔ `{ Width, Height, Offset_Ratio }` (e.g., `{30, 15, 0.5}`)
+*   **`"ashlar"`** ➔ `{ Min_Width, Max_Width, Row_Height }` (e.g., `{10, 40, 15}`)
+*   **`"herringbone"`** ➔ `{ Brick_Length, Brick_Thickness }` (e.g., `{30, 10}`)
+*   **`"scallop"`** ➔ `{ Radius, Rotation_Angle }` (e.g., `{15, 180}` *for inverted scales*)
+
+#### > Radial and Impact Engines
+*   **`"web"`** ➔ `{ Num_Rings, Num_Rays, Chaos_Level, CenterX (optional), CenterY (optional) }` 
+    *(e.g., `{5, 12, 0.3}` generates a spiderweb with 5 rings, 12 points, and 30% organic distortion).*
+
+#### > Glitch and Subdivision Engines
+*   **`"mondrian"`** ➔ `{ Min_Size, Cut_Probability }` (e.g., `{12, 0.45}`)
+*   **`"quad"`** ➔ `{ Min_Size, prob = 0.5 }` 
+    *(⚠️ **Critical Notice:** For the quad engine, the probability must be declared with the explicit `prob=` key).*
+
+#### > Ultra-Advanced Engines
+*   **`"circuit"`** ➔ `{ Cell_Size, Trace_Thickness, Solder_Probability }` (e.g., `{20, 3, 0.2}`)
+*   **`"pattern"`** ➔ `{ Shape_String, Cell_Size, Drawing_Size, Stagger_Rows_Bool, Is_Positive_Bool }` 
+    *(e.g., `{ shape.star, 30, 20, true, false }` pierces the text with staggered stars).*
