@@ -95,6 +95,10 @@ Este archivo contiene el núcleo matemático y algorítmico del Kara Effector. E
 *   `shape.mesh_utils.make_circle`
 *   `shape.slice_mesh`
 
+Puede revisar el manual de esta librería en este [link](https://github.com/Seijitsu-Subs/Kara_Effector/blob/master/Docs%20and%20manuals/Kara-Effector-Seijitsu-extensions_3.6.004_Manual_ES.md).
+
+---
+
 ### Readme_EN:
 
 Kara_Effector 3.6.004 Seijitsu Fork
@@ -194,4 +198,8 @@ This file contains the mathematical and algorithmic core of Kara Effector. In th
 *   `shape.mesh_utils.hash_rand`
 *   `shape.mesh_utils.make_circle`
 *   `shape.slice_mesh`
+
+You can check the docs for this library using this [link](https://github.com/Seijitsu-Subs/Kara_Effector/blob/master/Docs%20and%20manuals/Kara-Effector-Seijitsu-extensions_3.6.004_Manual_EN.md).
+
+---
 
