@@ -1,3 +1,5 @@
+<img width="2160" height="360" alt="Promo" src="https://github.com/user-attachments/assets/4c3ebac7-56c5-499b-91b2-7289a7d3a4a7" />
+
 Kara_Effector 3.6.004 Seijitsu Fork
 =============
 Este es un fork del creador de plantillas (*templater*) [Kara Effector](https://github.com/KaraEffect0r/Kara_Effector/tree/master) para [Aegisub](https://aegisub.org/).
