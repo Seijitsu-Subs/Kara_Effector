@@ -13,9 +13,16 @@ Estamos decididos a seguir innovando sobre la maravillosa base que han estableci
 
 Esperamos que esto les resulte útil y que utilicen Kara Effector como un *templater* completo, y no solamente como una librería de efectos.
 
-## Guía de instalación:
+## Guía de instalación: / Installation guide:
 
 https://github.com/user-attachments/assets/b316e01d-e58e-499c-aa52-a9088c179f43
+
+*(⚠️ **Atención:** Para utilizar las funciones que cortan shapes necesitará tener instalada también la automatización `Shapery`.)*
+
+*(⚠️ **Attention:** To use the shape-cutting functions, you will also need to have the `Shapery` automation installed.)*
+
+https://github.com/user-attachments/assets/64f0e1d3-3fe9-475b-bfc5-3386d059a59d
+
 
 
 **Cambios incluidos hasta ahora:**
