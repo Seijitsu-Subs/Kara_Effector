@@ -13,6 +13,11 @@ Estamos decididos a seguir innovando sobre la maravillosa base que han estableci
 
 Esperamos que esto les resulte útil y que utilicen Kara Effector como un *templater* completo, y no solamente como una librería de efectos.
 
+## Guía de instalación:
+
+https://github.com/user-attachments/assets/b316e01d-e58e-499c-aa52-a9088c179f43
+
+
 **Cambios incluidos hasta ahora:**
 =============
 
