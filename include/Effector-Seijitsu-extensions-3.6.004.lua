@@ -8,8 +8,18 @@
 local status, ILL = pcall(require, "ILL.ILL")
 local SHP = status and ILL.Path or nil
 
-if not SHP then
-    aegisub.debug.out(0, "[Error] ILL.ILL Shapery no encontrado. Los efectos vectoriales no funcionarán.\n")
+-- Fix Aegisub 3.2.2: Flag para advertir sobre la falta de ILL solo durante la ejecución
+local warning_shp_printed = false
+
+local function check_shp_available()
+    if not SHP then
+        if not warning_shp_printed then
+            aegisub.debug.out(0, "[Error] ILL.ILL Shapery no encontrado. Los efectos vectoriales no funcionarán.\n")
+            warning_shp_printed = true
+        end
+        return false
+    end
+    return true
 end
 
 -- Variables Globales y Cachés de Seijitsu
@@ -26,6 +36,9 @@ local function _clean(shape)
 end
 
 local function _run_shp(shape_str, action_fn, context_name)
+    -- Fix: Validación segura retrasada
+    if not check_shp_available() then return shape_str end
+    
     if type(shape_str) ~= "string" then 
         aegisub.debug.out(1, string.format("[Aviso %s] Se esperaba un vector, pero se recibió: %s\n", context_name, type(shape_str)))
         return ""
@@ -61,7 +74,8 @@ function FX_ShpOffset(str, dist)
 end
 
 function FX_ShpRound(str, rad)
-    if not SHP or type(str) ~= "string" or str == "" then return str end
+    if not check_shp_available() then return str end -- Fix
+    if type(str) ~= "string" or str == "" then return str end
     if str:match("nan") or str:match("inf") then return str end
 
     local ok, result_or_err = pcall(function()
@@ -89,7 +103,8 @@ function FX_ShpTransform(str, sx, sy, rot, tx, ty)
 end
 
 function FX_ShpBoolean(str_A, str_B, op)
-    if not SHP or type(str_A) ~= "string" or type(str_B) ~= "string" then return str_A end
+    if not check_shp_available() then return str_A end -- Fix
+    if type(str_A) ~= "string" or type(str_B) ~= "string" then return str_A end
     if str_A == "" or str_B == "" then return str_A end
 
     local ok, result_or_err = pcall(function()
@@ -132,7 +147,8 @@ end
 
 function FX_ShpBox(str)
     local empty_box = {x=0, y=0, w=0, h=0, cx=0, cy=0}
-    if not SHP or type(str) ~= "string" or str == "" then return empty_box end
+    if not check_shp_available() then return empty_box end -- Fix
+    if type(str) ~= "string" or str == "" then return empty_box end
     
     local ok, box_or_err = pcall(function()
         local p = SHP(str)
